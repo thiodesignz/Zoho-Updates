@@ -8,10 +8,10 @@
     "build": "echo 'No build step needed for static site'"
   },
   "keywords": ["zoho", "updates", "tracker", "scraper"],
-  "author": "Your Name",
+  "author": "Thrihash", 
   "license": "MIT",
   "dependencies": {},
   "engines": {
-    "node": "20.x"
+    "node": "22.x"
   }
 }
