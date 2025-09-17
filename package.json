@@ -1,0 +1,17 @@
+{
+  "name": "zoho-updates-tracker",
+  "version": "1.0.0",
+  "description": "Track latest updates for Zoho products",
+  "main": "index.html",
+  "scripts": {
+    "dev": "vercel dev",
+    "build": "echo 'No build step needed for static site'"
+  },
+  "keywords": ["zoho", "updates", "tracker", "scraper"],
+  "author": "Your Name",
+  "license": "MIT",
+  "dependencies": {},
+  "engines": {
+    "node": "18.x"
+  }
+}
