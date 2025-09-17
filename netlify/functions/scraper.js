@@ -1,14 +1,13 @@
 /**
- * Vercel Serverless Function - Zoho Product Updates Scraper
- * Deploy this to Vercel for automatic scraping
+ * Netlify Function - Zoho Product Updates Scraper
+ * Much simpler than Vercel - no runtime issues!
  */
 
-import https from 'https';
-import http from 'http';
+const https = require('https');
+const http = require('http');
 
-// Configuration
+// Configuration - All your Zoho products
 const CONFIG = {
-  // Your products - add your Zoho products here (from your CSV)
   PRODUCTS: [
     { name: 'Zoho CRM', homepage: 'https://www.zoho.com/crm/', updates_url: 'https://www.zoho.com/crm/whats-new/' },
     { name: 'Zoho SalesIQ', homepage: 'https://www.zoho.com/salesiq/', updates_url: null },
@@ -50,30 +49,46 @@ const CONFIG = {
     { name: 'Zoho One', homepage: 'https://www.zoho.com/one/', updates_url: null },
     { name: 'Zoho Desk', homepage: 'https://www.zoho.com/desk/', updates_url: 'https://www.zoho.com/desk/whats-new/' },
     { name: 'Zoho FSM', homepage: 'https://www.zoho.com/fieldservice/', updates_url: null },
-    // Add more products as needed - you can add all 92 from your CSV
+    { name: 'Zoho Lens', homepage: 'https://www.zoho.com/lens/', updates_url: null },
+    { name: 'Zoho TeamInbox', homepage: 'https://www.zoho.com/teaminbox/', updates_url: null },
+    { name: 'Zoho PageSense', homepage: 'https://www.zoho.com/pagesense/', updates_url: null },
+    { name: 'Zoho Backstage', homepage: 'https://www.zoho.com/backstage/', updates_url: null },
+    { name: 'Zoho Bookings', homepage: 'https://www.zoho.com/bookings/', updates_url: null },
+    { name: 'Zoho Sprints', homepage: 'https://www.zoho.com/sprints/', updates_url: null },
+    { name: 'Zoho Orchestly', homepage: 'https://www.zoho.com/orchestly/', updates_url: null },
+    { name: 'Zoho Remotely', homepage: 'https://www.zoho.com/remotely/', updates_url: null },
+    { name: 'Zoho Learn', homepage: 'https://www.zoho.com/learn/', updates_url: null }
+    // You can add all 92 products from your CSV here
   ],
   
   USER_AGENT: 'ZohoUpdatesBot/1.0',
-  REQUEST_DELAY: 1000, // Reduced for Vercel's 10s timeout
-  MAX_UPDATES_PER_PRODUCT: 3
+  REQUEST_DELAY: 2000,
+  MAX_UPDATES_PER_PRODUCT: 5
 };
 
-const UPDATE_PATHS = ['/whats-new', '/whatsnew', '/updates', '/release-notes', '/changelog'];
+const UPDATE_PATHS = ['/whats-new', '/whatsnew', '/updates', '/release-notes', '/changelog', '/blog'];
 
-export default async function handler(req, res) {
+// Main Netlify function handler
+exports.handler = async (event, context) => {
   // CORS headers
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  const headers = {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'GET, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type',
+    'Content-Type': 'application/json'
+  };
 
-  if (req.method === 'OPTIONS') {
-    res.status(200).end();
-    return;
+  // Handle CORS preflight
+  if (event.httpMethod === 'OPTIONS') {
+    return { statusCode: 200, headers, body: '' };
   }
 
-  if (req.method !== 'GET') {
-    res.status(405).json({ error: 'Method not allowed' });
-    return;
+  if (event.httpMethod !== 'GET') {
+    return {
+      statusCode: 405,
+      headers,
+      body: JSON.stringify({ error: 'Method not allowed' })
+    };
   }
 
   try {
@@ -84,8 +99,8 @@ export default async function handler(req, res) {
       products: []
     };
 
-    // Process products (limited for Vercel timeout)
-    const productsToProcess = CONFIG.PRODUCTS.slice(0, 8); // Limit for timeout
+    // Process products (limit for function timeout)
+    const productsToProcess = CONFIG.PRODUCTS.slice(0, 10);
     
     for (let i = 0; i < productsToProcess.length; i++) {
       const product = productsToProcess[i];
@@ -95,7 +110,7 @@ export default async function handler(req, res) {
         const productResult = await scrapeProductUpdates(product);
         results.products.push(productResult);
         
-        // Small delay to be polite
+        // Rate limiting
         if (i < productsToProcess.length - 1) {
           await sleep(CONFIG.REQUEST_DELAY);
         }
@@ -111,19 +126,28 @@ export default async function handler(req, res) {
       }
     }
 
-    res.status(200).json(results);
+    return {
+      statusCode: 200,
+      headers,
+      body: JSON.stringify(results, null, 2)
+    };
 
   } catch (error) {
     console.error('Function error:', error);
-    res.status(500).json({ 
-      error: true, 
-      message: error.message,
-      fetched_at: new Date().toISOString(),
-      products: []
-    });
+    return {
+      statusCode: 500,
+      headers,
+      body: JSON.stringify({ 
+        error: true, 
+        message: error.message,
+        fetched_at: new Date().toISOString(),
+        products: []
+      })
+    };
   }
-}
+};
 
+// Scrape updates for a single product
 async function scrapeProductUpdates(product) {
   const result = {
     name: product.name,
@@ -138,7 +162,7 @@ async function scrapeProductUpdates(product) {
   try {
     const baseUrl = getBaseUrl(product.homepage);
     
-    // Quick robots.txt check (simplified for speed)
+    // Check robots.txt
     if (await isBlockedByRobots(baseUrl)) {
       result.status = 'source_blocked_by_robots';
       return result;
@@ -146,6 +170,7 @@ async function scrapeProductUpdates(product) {
 
     let updatesUrl = product.updates_url;
     
+    // Try to discover updates URL if not provided
     if (!updatesUrl) {
       updatesUrl = await discoverUpdatesUrl(product.homepage);
     }
@@ -157,10 +182,11 @@ async function scrapeProductUpdates(product) {
 
     result.updates_url = updatesUrl;
     
+    // Scrape the updates page
     const updates = await scrapeUpdatesFromUrl(updatesUrl);
     
     if (updates && updates.length > 0) {
-      result.updates = updates;
+      result.updates = updates.slice(0, CONFIG.MAX_UPDATES_PER_PRODUCT);
       result.status = 'ok';
     } else {
       result.status = 'no_updates_found';
@@ -173,42 +199,66 @@ async function scrapeProductUpdates(product) {
   return result;
 }
 
+// Check robots.txt
 async function isBlockedByRobots(baseUrl) {
   try {
-    const robotsText = await fetchUrl(baseUrl + '/robots.txt', 3000); // Quick timeout
-    return robotsText.toLowerCase().includes('disallow: /');
+    const robotsText = await fetchUrl(baseUrl + '/robots.txt', 5000);
+    const lines = robotsText.split('\n');
+    let inUserAgentSection = false;
+    
+    for (const line of lines) {
+      const trimmed = line.trim().toLowerCase();
+      
+      if (trimmed.startsWith('user-agent:')) {
+        const agent = trimmed.substring(11).trim();
+        inUserAgentSection = (agent === '*');
+      } else if (inUserAgentSection && trimmed.startsWith('disallow:')) {
+        const path = trimmed.substring(9).trim();
+        if (path === '/' || path === '') {
+          return true;
+        }
+      }
+    }
+    
+    return false;
   } catch (error) {
     return false; // Assume allowed if can't check
   }
 }
 
+// Discover updates URL
 async function discoverUpdatesUrl(homepage) {
   const baseUrl = getBaseUrl(homepage);
   
+  // Try common update paths
   for (const path of UPDATE_PATHS) {
     try {
       const testUrl = baseUrl + path;
-      const isValid = await testUrlExists(testUrl);
-      if (isValid) {
+      const exists = await testUrlExists(testUrl);
+      if (exists) {
+        console.log(`Found updates page: ${testUrl}`);
         return testUrl;
       }
     } catch (e) {
-      // Continue
+      // Continue trying
     }
   }
   
   return null;
 }
 
+// Scrape updates from URL
 async function scrapeUpdatesFromUrl(url) {
   try {
-    const html = await fetchUrl(url, 8000);
+    const html = await fetchUrl(url, 10000);
     return parseUpdatesFromHtml(html, url);
   } catch (error) {
+    console.error(`Failed to fetch ${url}:`, error);
     return [];
   }
 }
 
+// Parse updates from HTML
 function parseUpdatesFromHtml(html, baseUrl) {
   const updates = [];
   
@@ -216,11 +266,11 @@ function parseUpdatesFromHtml(html, baseUrl) {
   const headingPattern = /<h[1-6][^>]*>([^<]+)<\/h[1-6]>/gi;
   let match;
   
-  while ((match = headingPattern.exec(html)) !== null) {
+  while ((match = headingPattern.exec(html)) !== null && updates.length < CONFIG.MAX_UPDATES_PER_PRODUCT * 2) {
     const title = match[1].trim();
     
     if (title.length > 10 && title.length < 200) {
-      // Try to find a date near this heading
+      // Extract date from surrounding text
       const surroundingText = html.substring(
         Math.max(0, match.index - 500), 
         Math.min(html.length, match.index + 1000)
@@ -239,18 +289,40 @@ function parseUpdatesFromHtml(html, baseUrl) {
         }
       }
       
+      // Create summary
+      const textContent = surroundingText.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+      let summary = 'Click to view details';
+      if (textContent.length > title.length + 20) {
+        const sentences = textContent.split(/[.!?]+/);
+        if (sentences[1] && sentences[1].length > 20) {
+          summary = sentences[1].trim().substring(0, 150);
+          if (sentences[1].length > 150) summary += '...';
+        }
+      }
+      
       updates.push({
         title,
         date,
-        summary: 'Click to view details',
+        summary,
         link: baseUrl
       });
-      
-      if (updates.length >= CONFIG.MAX_UPDATES_PER_PRODUCT) break;
     }
   }
   
-  return updates.sort((a, b) => new Date(b.date) - new Date(a.date));
+  // Remove duplicates and sort by date
+  const uniqueUpdates = [];
+  const seenTitles = new Set();
+  
+  for (const update of updates) {
+    if (!seenTitles.has(update.title)) {
+      seenTitles.add(update.title);
+      uniqueUpdates.push(update);
+    }
+  }
+  
+  return uniqueUpdates
+    .sort((a, b) => new Date(b.date) - new Date(a.date))
+    .slice(0, CONFIG.MAX_UPDATES_PER_PRODUCT);
 }
 
 // Utility functions
@@ -263,14 +335,14 @@ function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-function fetchUrl(url, timeout = 5000) {
+function fetchUrl(url, timeout = 10000) {
   return new Promise((resolve, reject) => {
     const client = url.startsWith('https:') ? https : http;
     
     const req = client.get(url, {
       headers: { 'User-Agent': CONFIG.USER_AGENT }
     }, (res) => {
-      if (res.statusCode !== 200) {
+      if (res.statusCode < 200 || res.statusCode >= 300) {
         reject(new Error(`HTTP ${res.statusCode}`));
         return;
       }
@@ -283,12 +355,12 @@ function fetchUrl(url, timeout = 5000) {
     req.on('error', reject);
     req.setTimeout(timeout, () => {
       req.destroy();
-      reject(new Error('Timeout'));
+      reject(new Error('Request timeout'));
     });
   });
 }
 
-function testUrlExists(url, timeout = 3000) {
+function testUrlExists(url, timeout = 5000) {
   return new Promise((resolve) => {
     const client = url.startsWith('https:') ? https : http;
     

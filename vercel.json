@@ -1,7 +1,0 @@
-{
-  "functions": {
-    "api/scraper.js": {
-      "runtime": "@vercel/node@22.9.0"
-    }
-  }
-}
