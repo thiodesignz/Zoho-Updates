@@ -1,17 +1,7 @@
 {
   "functions": {
     "api/scraper.js": {
-      "runtime": "nodejs22.x"
+      "runtime": "@vercel/node@22.9.0"
     }
-  },
-  "routes": [
-    {
-      "src": "/api/(.*)",
-      "dest": "/api/$1"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/$1"
-    }
-  ]
+  }
 }
