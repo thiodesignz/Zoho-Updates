@@ -8,5 +8,6 @@
   },
   "keywords": ["zoho", "updates", "tracker", "scraper"],
   "author": "Your Name",
-  "license": "MIT"
+  "license": "MIT",
+  "type": "module"
 }

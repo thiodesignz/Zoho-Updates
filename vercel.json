@@ -1,7 +1,7 @@
 {
   "functions": {
-    "api/scraper.js": {
-      "runtime": "@vercel/node@18"
+    "api/*.js": {
+      "runtime": "nodejs18.x"
     }
   }
 }
