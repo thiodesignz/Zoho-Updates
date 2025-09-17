@@ -5,15 +5,14 @@
 
 // Configuration - Update this with your Vercel deployment URL
 const CONFIG = {
-    // Replace with your Vercel deployment URL after deployment
-    API_URL: 'https://68caf9f24f3a8324f5c07469--zohoupdates.netlify.app/.netlify/functions/scraper'
-    // Local storage settings
-    CACHE_KEY: 'zoho_updates_cache',
-    CACHE_DURATION: 24 * 60 * 60 * 1000, // 24 hours in milliseconds
+    // Change from the broken URL to this corrected one:
+    API_URL: 'https://68caf9f24f3a8324f5c07469--zohoupdates.netlify.app/.netlify/functions/scraper',
     
-    // UI settings
-    ANIMATION_DELAY: 100 // Stagger card animations
+    CACHE_KEY: 'zoho_updates_cache',
+    CACHE_DURATION: 24 * 60 * 60 * 1000,
+    ANIMATION_DELAY: 100
 };
+    
 
 // Global state
 let currentData = null;
