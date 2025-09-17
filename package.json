@@ -7,10 +7,6 @@
     "build": "echo 'Static site ready'"
   },
   "keywords": ["zoho", "updates", "tracker", "scraper"],
-  "author": "Thrihash",
-  "license": "MIT",
-  "dependencies": {},
-  "engines": {
-    "node": "22.x"
-  }
+  "author": "Your Name",
+  "license": "MIT"
 }
