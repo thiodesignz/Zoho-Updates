@@ -6,7 +6,7 @@
 // Configuration - Update this with your Vercel deployment URL
 const CONFIG = {
     // Replace with your Vercel deployment URL after deployment
-    API_URL: 'https://your-actual-site.netlify.app/.netlify/functions/scraper'
+    API_URL: 'https://https://68caf9f24f3a8324f5c07469--zohoupdates.netlify.app//.netlify/functions/scraper'
     // Local storage settings
     CACHE_KEY: 'zoho_updates_cache',
     CACHE_DURATION: 24 * 60 * 60 * 1000, // 24 hours in milliseconds
