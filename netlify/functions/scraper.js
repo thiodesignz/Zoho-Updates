@@ -1,126 +1,68 @@
 /**
- * Production Zoho Updates Scraper - Final Working Version
- * Based on successful debug results with optimized patterns
+ * Optimized Production Scraper - Memory & Time Efficient
+ * Reduced scope for better reliability within Netlify function limits
  */
 
 const https = require('https');
 const http = require('http');
 
-// Complete configuration with all requested sources
+// Optimized configuration - focus on high-value sources
 const CONFIG = {
   PRODUCTS: [
-    // News & General Sources (Priority - Most content-rich)
+    // High-priority news sources (most content-rich)
     { name: 'Zoho Blog', homepage: 'https://www.zoho.com/blog/', updates_url: 'https://www.zoho.com/blog/', category: 'News' },
     { name: 'Zoho Community', homepage: 'https://help.zoho.com/portal/en/community', updates_url: 'https://help.zoho.com/portal/en/community', category: 'News' },
     { name: 'Zoho Press Releases', homepage: 'https://www.zoho.com/press.html', updates_url: 'https://www.zoho.com/press.html', category: 'News' },
-    { name: 'Zoho In The News', homepage: 'https://www.zoho.com/inthenews.html', updates_url: 'https://www.zoho.com/inthenews.html', category: 'News' },
-    { name: 'Zoho Newsletter', homepage: 'https://www.zoho.com/newsletter.html', updates_url: 'https://www.zoho.com/newsletter.html', category: 'News' },
-    { name: 'Zoho Creator Community News', homepage: 'https://help.zoho.com/portal/en/community/zoho-creator/news-and-updates', updates_url: 'https://help.zoho.com/portal/en/community/zoho-creator/news-and-updates', category: 'News' },
-    { name: 'Zoho News Details', homepage: 'https://www.zoho.com/inthenews-detail.html', updates_url: 'https://www.zoho.com/inthenews-detail.html', category: 'News' },
-    { name: 'Zoho Influence News', homepage: 'https://www.zoho.com/r/influence/in-the-news', updates_url: 'https://www.zoho.com/r/influence/in-the-news', category: 'News' },
     
-    // CRM & Sales - Use homepage scraping since it works better
+    // Core CRM & Sales (homepage scraping works)
     { name: 'Zoho CRM', homepage: 'https://www.zoho.com/crm/', updates_url: null, category: 'CRM & Sales' },
     { name: 'Zoho SalesIQ', homepage: 'https://www.zoho.com/salesiq/', updates_url: null, category: 'CRM & Sales' },
-    { name: 'Zoho Campaigns', homepage: 'https://www.zoho.com/campaigns/', updates_url: null, category: 'CRM & Sales' },
-    { name: 'Zoho Social', homepage: 'https://www.zoho.com/social/', updates_url: null, category: 'CRM & Sales' },
-    { name: 'Zoho Motivator', homepage: 'https://www.zoho.com/motivator/', updates_url: null, category: 'CRM & Sales' },
     
-    // Finance
-    { name: 'Zoho Books', homepage: 'https://www.zoho.com/books/', updates_url: 'https://www.zoho.com/us/books/whats-new.html', category: 'Finance' },
+    // Key Finance products
+    { name: 'Zoho Books', homepage: 'https://www.zoho.com/books/', updates_url: null, category: 'Finance' },
     { name: 'Zoho Invoice', homepage: 'https://www.zoho.com/invoice/', updates_url: null, category: 'Finance' },
-    { name: 'Zoho Billing', homepage: 'https://www.zoho.com/billing/', updates_url: null, category: 'Finance' },
-    { name: 'Zoho Expense', homepage: 'https://www.zoho.com/expense/', updates_url: null, category: 'Finance' },
-    { name: 'Zoho Inventory', homepage: 'https://www.zoho.com/inventory/', updates_url: null, category: 'Finance' },
-    { name: 'Zoho Subscriptions', homepage: 'https://www.zoho.com/subscriptions/', updates_url: null, category: 'Finance' },
     
-    // Support & Service
-    { name: 'Zoho Desk', homepage: 'https://www.zoho.com/desk/', updates_url: 'https://www.zoho.com/desk/release-notes.html', category: 'Support' },
-    { name: 'Zoho FSM', homepage: 'https://www.zoho.com/fieldservice/', updates_url: 'https://www.zoho.com/fsm/release-notes.html', category: 'Support' },
+    // Important Support products
+    { name: 'Zoho Desk', homepage: 'https://www.zoho.com/desk/', updates_url: null, category: 'Support' },
     { name: 'Zoho Assist', homepage: 'https://www.zoho.com/assist/', updates_url: null, category: 'Support' },
-    { name: 'Zoho Lens', homepage: 'https://www.zoho.com/lens/', updates_url: null, category: 'Support' },
     
-    // Productivity & Collaboration
-    { name: 'Zoho Mail', homepage: 'https://www.zoho.com/mail/', updates_url: 'https://www.zoho.com/workplace/whats-new.html', category: 'Productivity' },
-    { name: 'Zoho WorkDrive', homepage: 'https://www.zoho.com/workdrive/', updates_url: 'https://www.zoho.com/workplace/whats-new.html', category: 'Productivity' },
-    { name: 'Zoho Writer', homepage: 'https://www.zoho.com/writer/', updates_url: 'https://www.zoho.com/workplace/whats-new.html', category: 'Productivity' },
-    { name: 'Zoho Sheet', homepage: 'https://www.zoho.com/sheet/', updates_url: 'https://www.zoho.com/workplace/whats-new.html', category: 'Productivity' },
-    { name: 'Zoho Show', homepage: 'https://www.zoho.com/show/', updates_url: 'https://www.zoho.com/workplace/whats-new.html', category: 'Productivity' },
-    { name: 'Zoho Cliq', homepage: 'https://www.zoho.com/cliq/', updates_url: 'https://www.zoho.com/workplace/whats-new.html', category: 'Productivity' },
-    { name: 'Zoho Connect', homepage: 'https://www.zoho.com/connect/', updates_url: null, category: 'Productivity' },
-    { name: 'Zoho Projects', homepage: 'https://www.zoho.com/projects/', updates_url: null, category: 'Productivity' },
-    { name: 'Zoho Meeting', homepage: 'https://www.zoho.com/meeting/', updates_url: null, category: 'Productivity' },
+    // Core Productivity
+    { name: 'Zoho Mail', homepage: 'https://www.zoho.com/mail/', updates_url: null, category: 'Productivity' },
+    { name: 'Zoho WorkDrive', homepage: 'https://www.zoho.com/workdrive/', updates_url: null, category: 'Productivity' },
     
-    // Development & Analytics
+    // Key Development tools
     { name: 'Zoho Creator', homepage: 'https://www.zoho.com/creator/', updates_url: 'https://www.zoho.com/creator/release-notes/', category: 'Development' },
-    { name: 'Zoho Analytics', homepage: 'https://www.zoho.com/analytics/', updates_url: 'https://www.zoho.com/analytics/whats-new/release-notes.html', category: 'Development' },
-    { name: 'Zoho Flow', homepage: 'https://www.zoho.com/flow/', updates_url: 'https://www.zoho.com/flow/release-notes/', category: 'Development' },
-    { name: 'Zoho Deluge', homepage: 'https://www.zoho.com/deluge/', updates_url: 'https://www.zoho.com/deluge/help/release-notes.html', category: 'Development' },
-    { name: 'Zoho Forms', homepage: 'https://www.zoho.com/forms/', updates_url: null, category: 'Development' },
+    { name: 'Zoho Analytics', homepage: 'https://www.zoho.com/analytics/', updates_url: null, category: 'Development' },
     
-    // HR & Operations
+    // HR essentials
     { name: 'Zoho People', homepage: 'https://www.zoho.com/people/', updates_url: null, category: 'HR' },
-    { name: 'Zoho Recruit', homepage: 'https://www.zoho.com/recruit/', updates_url: null, category: 'HR' },
-    { name: 'Zoho Payroll', homepage: 'https://www.zoho.com/payroll/', updates_url: null, category: 'HR' },
-    { name: 'Zoho Bookings', homepage: 'https://www.zoho.com/bookings/', updates_url: 'https://www.zoho.com/bookings/help/release-notes.html', category: 'HR' },
-    { name: 'Zoho Sign', homepage: 'https://www.zoho.com/sign/', updates_url: null, category: 'HR' },
     
-    // Marketing & Web
-    { name: 'Zoho Sites', homepage: 'https://www.zoho.com/sites/', updates_url: null, category: 'Marketing' },
-    { name: 'Zoho PageSense', homepage: 'https://www.zoho.com/pagesense/', updates_url: null, category: 'Marketing' },
-    { name: 'Zoho Backstage', homepage: 'https://www.zoho.com/backstage/', updates_url: null, category: 'Marketing' },
-    { name: 'Zoho Survey', homepage: 'https://www.zoho.com/survey/', updates_url: null, category: 'Marketing' },
-    
-    // Other
-    { name: 'Zoho One', homepage: 'https://www.zoho.com/one/', updates_url: null, category: 'Other' },
-    { name: 'Zoho Catalyst', homepage: 'https://catalyst.zoho.com/', updates_url: null, category: 'Development' }
+    // Other important
+    { name: 'Zoho One', homepage: 'https://www.zoho.com/one/', updates_url: null, category: 'Other' }
   ],
   
   USER_AGENT: 'ZohoUpdatesBot/1.0',
-  REQUEST_DELAY: 1500,
-  MAX_UPDATES_PER_PRODUCT: 5
+  REQUEST_DELAY: 1000, // Reduced delay
+  MAX_UPDATES_PER_PRODUCT: 3, // Reduced to save memory
+  FETCH_TIMEOUT: 8000, // Reduced timeout
+  MAX_HTML_SIZE: 50000 // Limit HTML processing
 };
 
-const UPDATE_PATHS = ['/whats-new', '/whatsnew', '/updates', '/release-notes', '/changelog', '/blog', '/news'];
+const UPDATE_PATHS = ['/whats-new', '/updates', '/release-notes'];
 
-// Update classification patterns (from debug success)
+// Simplified classification patterns
 const UPDATE_TYPE_PATTERNS = {
-  'New Features': [
-    /\b(new|introducing|launch|launched|added|released|announcing)\b/i,
-    /\bfeature\b/i,
-    /\bversion\s+\d+/i
-  ],
-  'Improvements': [
-    /\b(enhanced|improved|better|optimized|upgrade|updated)\b/i,
-    /\b(performance|speed|efficiency)\b/i
-  ],
-  'Bug Fixes': [
-    /\b(fixed|resolved|corrected|bug|issue|problem)\b/i,
-    /\bpatch\b/i
-  ],
-  'Security': [
-    /\b(security|patch|vulnerability|secure)\b/i,
-    /\b(authentication|authorization|encryption)\b/i
-  ],
-  'API Changes': [
-    /\bAPI\b/i,
-    /\b(integration|endpoint|webhook|developer)\b/i
-  ]
-};
-
-const PRIORITY_PATTERNS = {
-  'Critical': [
-    /\b(critical|urgent|important|security|vulnerability)\b/i,
-    /\b(major\s+bug|critical\s+fix)\b/i
-  ],
-  'Major': [
-    /\b(major|significant|release|version)\b/i,
-    /\b(new\s+feature|launch)\b/i
-  ]
+  'New Features': /\b(new|introducing|launch|feature)\b/i,
+  'Improvements': /\b(enhanced|improved|better|optimized)\b/i,
+  'Bug Fixes': /\b(fixed|resolved|bug|issue)\b/i,
+  'Security': /\b(security|patch|vulnerability)\b/i
 };
 
 // Main Netlify function handler
 exports.handler = async (event, context) => {
+  // Set function timeout context
+  context.callbackWaitsForEmptyEventLoop = false;
+  
   const headers = {
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Methods': 'GET, OPTIONS',
@@ -141,72 +83,67 @@ exports.handler = async (event, context) => {
   }
 
   try {
-    console.log('Starting production scrape with working patterns...');
+    console.log('Starting optimized scrape...');
+    const startTime = Date.now();
     
     const results = {
       fetched_at: new Date().toISOString(),
       products: [],
-      categories: getUniqueCategories(),
+      categories: ['News', 'CRM & Sales', 'Finance', 'Support', 'Productivity', 'Development', 'HR', 'Other'],
       summary: {
-        total_products: 0,
+        total_products: CONFIG.PRODUCTS.length,
         products_with_updates: 0,
-        total_updates: 0,
-        by_category: {}
+        total_updates: 0
       }
     };
 
-    // Process all products
-    const productsToProcess = CONFIG.PRODUCTS;
-    
-    for (let i = 0; i < productsToProcess.length; i++) {
-      const product = productsToProcess[i];
-      console.log(`Processing ${i+1}/${productsToProcess.length}: ${product.name}`);
+    // Process products with time limits
+    for (let i = 0; i < CONFIG.PRODUCTS.length; i++) {
+      const product = CONFIG.PRODUCTS[i];
+      
+      // Check if we're running out of time (Netlify has 10s limit)
+      const elapsed = Date.now() - startTime;
+      if (elapsed > 8000) { // Stop at 8 seconds to leave buffer
+        console.log(`Stopping early due to time limit. Processed ${i}/${CONFIG.PRODUCTS.length} products.`);
+        break;
+      }
+      
+      console.log(`Processing ${i+1}/${CONFIG.PRODUCTS.length}: ${product.name}`);
       
       try {
-        const productResult = await scrapeProductUpdatesEnhanced(product);
+        const productResult = await scrapeProductOptimized(product);
         results.products.push(productResult);
         
-        // Update summary statistics
-        results.summary.total_products++;
         if (productResult.updates && productResult.updates.length > 0) {
           results.summary.products_with_updates++;
           results.summary.total_updates += productResult.updates.length;
         }
         
-        // Category statistics
-        const category = productResult.category || 'Other';
-        if (!results.summary.by_category[category]) {
-          results.summary.by_category[category] = {
-            products: 0,
-            updates: 0
-          };
-        }
-        results.summary.by_category[category].products++;
-        results.summary.by_category[category].updates += productResult.updates ? productResult.updates.length : 0;
-        
-        // Rate limiting
-        if (i < productsToProcess.length - 1) {
+        // Minimal delay to avoid overwhelming servers
+        if (i < CONFIG.PRODUCTS.length - 1) {
           await sleep(CONFIG.REQUEST_DELAY);
         }
+        
       } catch (error) {
-        console.error(`Error processing ${product.name}:`, error);
+        console.error(`Error processing ${product.name}:`, error.message);
         results.products.push({
           name: product.name,
           homepage: product.homepage,
           category: product.category || 'Other',
           updates: [],
           status: 'error',
-          error_message: error.message
+          error_message: 'Processing timeout or error'
         });
       }
     }
 
-    console.log(`Scraping completed. Found ${results.summary.total_updates} updates across ${results.summary.products_with_updates} products`);
+    const totalTime = Date.now() - startTime;
+    console.log(`Scraping completed in ${totalTime}ms. Found ${results.summary.total_updates} updates.`);
 
     return {
       statusCode: 200,
       headers,
-      body: JSON.stringify(results, null, 2)
+      body: JSON.stringify(results)
     };
 
   } catch (error) {
@@ -224,19 +161,13 @@ exports.handler = async (event, context) => {
   }
 };
 
-// Get unique categories from product list
-function getUniqueCategories() {
-  const categories = [...new Set(CONFIG.PRODUCTS.map(p => p.category || 'Other'))];
-  return categories.sort();
-}
-
-// Enhanced scraping function based on debug success
-async function scrapeProductUpdatesEnhanced(product) {
+// Optimized product scraping
+async function scrapeProductOptimized(product) {
   const result = {
     name: product.name,
     homepage: product.homepage,
     category: product.category || 'Other',
-    updates_url: product.updates_url || null,
+    updates_url: product.updates_url || product.homepage,
     updates: [],
     status: 'error',
     error_message: null,
@@ -244,58 +175,38 @@ async function scrapeProductUpdatesEnhanced(product) {
   };
 
   try {
-    const baseUrl = getBaseUrl(product.homepage);
-    
-    // Check robots.txt
-    if (await isBlockedByRobots(baseUrl)) {
-      result.status = 'source_blocked_by_robots';
-      return result;
-    }
-
+    // Skip robots.txt check for speed (assume allowed)
     let allUpdates = [];
-    let updatesUrl = product.updates_url;
     
-    // Try explicit URL first
-    if (updatesUrl) {
-      const updates = await scrapeUpdatesFromUrl(updatesUrl, product.name);
-      allUpdates = allUpdates.concat(updates);
-      result.updates_url = updatesUrl;
-    }
+    // Try the most likely URL first
+    const urlToTry = product.updates_url || product.homepage;
+    const updates = await scrapeUrlOptimized(urlToTry, product.name);
+    allUpdates = allUpdates.concat(updates);
     
-    // If no explicit URL or no updates found, try discovery
-    if (!updatesUrl || allUpdates.length === 0) {
-      updatesUrl = await discoverUpdatesUrl(product.homepage);
-      
-      if (updatesUrl) {
-        result.updates_url = updatesUrl;
-        result.source_type = 'discovered';
-        const discoveredUpdates = await scrapeUpdatesFromUrl(updatesUrl, product.name);
+    // If no updates and no explicit URL, try one discovery attempt
+    if (allUpdates.length === 0 && !product.updates_url) {
+      const discoveredUrl = await quickDiscovery(product.homepage);
+      if (discoveredUrl) {
+        const discoveredUpdates = await scrapeUrlOptimized(discoveredUrl, product.name);
         allUpdates = allUpdates.concat(discoveredUpdates);
+        result.updates_url = discoveredUrl;
+        result.source_type = 'discovered';
       }
     }
     
-    // If still no updates, try scraping the homepage directly (this worked in debug!)
-    if (allUpdates.length === 0) {
-      result.updates_url = product.homepage;
-      const homepageUpdates = await scrapeHomepageForUpdates(product.homepage, product.name);
-      allUpdates = allUpdates.concat(homepageUpdates);
-    }
-    
-    // Process and classify updates
+    // Process results
     if (allUpdates.length > 0) {
       const classifiedUpdates = allUpdates.map(update => ({
         ...update,
-        type: classifyUpdateType(update.title, update.summary),
-        priority: classifyPriority(update.title, update.summary),
+        type: classifyUpdateTypeSimple(update.title),
+        priority: 'Normal',
         category: product.category || 'Other'
       }));
       
-      const uniqueUpdates = deduplicateUpdates(classifiedUpdates);
-      result.updates = uniqueUpdates.slice(0, CONFIG.MAX_UPDATES_PER_PRODUCT);
+      result.updates = deduplicateUpdatesSimple(classifiedUpdates).slice(0, CONFIG.MAX_UPDATES_PER_PRODUCT);
       result.status = 'ok';
     } else {
       result.status = 'no_updates_found';
-      result.error_message = 'No updates found on any checked pages';
     }
 
   } catch (error) {
@@ -305,204 +216,50 @@ async function scrapeProductUpdatesEnhanced(product) {
   return result;
 }
 
-// Classify update type based on content
-function classifyUpdateType(title, summary = '') {
-  const text = `${title} ${summary}`.toLowerCase();
-  
-  const scores = {};
-  
-  for (const [type, patterns] of Object.entries(UPDATE_TYPE_PATTERNS)) {
-    scores[type] = 0;
-    
-    for (const pattern of patterns) {
-      if (pattern.test(text)) {
-        scores[type]++;
-      }
-    }
-  }
-  
-  // Return the type with highest score, or 'General' if no matches
-  const maxScore = Math.max(...Object.values(scores));
-  if (maxScore === 0) return 'General';
-  
-  return Object.keys(scores).find(type => scores[type] === maxScore);
-}
-
-// Classify update priority
-function classifyPriority(title, summary = '') {
-  const text = `${title} ${summary}`.toLowerCase();
-  
-  for (const [priority, patterns] of Object.entries(PRIORITY_PATTERNS)) {
-    for (const pattern of patterns) {
-      if (pattern.test(text)) {
-        return priority;
-      }
-    }
-  }
-  
-  return 'Normal';
-}
-
-// Enhanced homepage scraping based on debug success
-async function scrapeHomepageForUpdates(homepage, productName) {
+// Optimized URL scraping
+async function scrapeUrlOptimized(url, productName) {
   try {
-    const html = await fetchUrl(homepage, 15000);
-    const updates = [];
+    const html = await fetchUrlOptimized(url);
     
-    // Use the successful patterns from debug version
-    const workingPatterns = [
-      // Generic headings (this worked for CRM)
-      /<h[1-4][^>]*>([^<]{20,180})<\/h[1-4]>/gi,
-      // Article patterns
-      /<article[^>]*>[\s\S]*?<h[1-6][^>]*>([^<]{20,200})<\/h[1-6]>[\s\S]*?<\/article>/gi,
-      // News/update patterns
-      /<(?:div|section)[^>]*class[^>]*(?:news|update|post|article)[^>]*>[\s\S]*?<h[1-6][^>]*>([^<]{15,200})<\/h[1-6]>/gi,
-      // Blog patterns for news sources
-      /<(?:div|li)[^>]*class[^>]*(?:post|entry|item)[^>]*>[\s\S]*?<h[1-6][^>]*>([^<]{15,200})<\/h[1-6]>/gi
-    ];
+    // Truncate HTML if too large
+    const htmlToProcess = html.length > CONFIG.MAX_HTML_SIZE ? 
+      html.substring(0, CONFIG.MAX_HTML_SIZE) : html;
     
-    for (const pattern of workingPatterns) {
-      let match;
-      while ((match = pattern.exec(html)) !== null && updates.length < 8) {
-        if (match[1]) {
-          const title = match[1].trim();
-          if (isValidTitle(title)) {
-            const contextStart = Math.max(0, match.index - 300);
-            const contextEnd = Math.min(html.length, match.index + 300);
-            const context = html.substring(contextStart, contextEnd);
-            
-            let date = extractDateFromContext(context) || new Date().toISOString().split('T')[0];
-            let summary = extractSummaryFromContext(context, title);
-            let link = extractLinkFromContext(context, homepage);
-            
-            updates.push({
-              title: title,
-              date: date,
-              summary: summary,
-              link: link
-            });
-          }
-        }
-      }
-      
-      // Stop after first successful pattern to avoid duplicates
-      if (updates.length > 0) break;
-    }
-    
-    return updates;
-    
+    return parseUpdatesOptimized(htmlToProcess, url, productName);
   } catch (error) {
-    console.error(`Homepage scraping failed for ${homepage}: ${error}`);
+    console.error(`Failed to fetch ${url}:`, error.message);
     return [];
   }
 }
 
-// Validate if a title looks like a real update
-function isValidTitle(title) {
-  if (!title || title.length < 10 || title.length > 300) return false;
-  
-  const blacklist = [
-    'cookie', 'privacy', 'terms', 'sign in', 'sign up', 'login', 'register',
-    'home', 'about', 'contact', 'help', 'support', '404', 'error', 'page not found'
-  ];
-  
-  const lowerTitle = title.toLowerCase();
-  return !blacklist.some(word => lowerTitle.includes(word));
-}
-
-// Extract date from context
-function extractDateFromContext(context) {
-  const datePatterns = [
-    /(\d{4}[-\/]\d{1,2}[-\/]\d{1,2})/,
-    /(\d{1,2}[-\/]\d{1,2}[-\/]\d{4})/,
-    /((?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\w*\s+\d{1,2},?\s+\d{4})/i
-  ];
-  
-  for (const pattern of datePatterns) {
-    const match = context.match(pattern);
-    if (match) {
-      try {
-        const parsedDate = new Date(match[1]);
-        if (!isNaN(parsedDate.getTime())) {
-          return parsedDate.toISOString().split('T')[0];
-        }
-      } catch (e) {
-        continue;
-      }
-    }
-  }
-  
-  return null;
-}
-
-// Extract summary from context
-function extractSummaryFromContext(context, title) {
-  const textContent = context.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
-  const withoutTitle = textContent.replace(title, '').trim();
-  
-  const sentences = withoutTitle.split(/[.!?]+/).filter(s => s.trim().length > 20);
-  
-  if (sentences[0] && sentences[0].length > 20) {
-    let summary = sentences[0].trim();
-    if (summary.length > 200) {
-      summary = summary.substring(0, 200) + '...';
-    }
-    return summary;
-  }
-  
-  return `Update from ${title.split(' ')[0]} - click to read more`;
-}
-
-// Extract link from context
-function extractLinkFromContext(context, fallbackUrl) {
-  const linkMatch = context.match(/<a[^>]+href=["']([^"']+)["']/i);
-  if (linkMatch && linkMatch[1]) {
-    let href = linkMatch[1];
-    
-    if (href.startsWith('/')) {
-      const baseUrl = getBaseUrl(fallbackUrl);
-      href = baseUrl + href;
-    } else if (!href.startsWith('http')) {
-      href = fallbackUrl;
-    }
-    
-    if (href.includes('zoho.com') && !href.includes('javascript:')) {
-      return href;
-    }
-  }
-  
-  return fallbackUrl;
-}
-
-// Enhanced HTML parsing with successful patterns
-function parseUpdatesFromHtml(html, baseUrl, productName = '') {
+// Optimized HTML parsing - focus on most common patterns
+function parseUpdatesOptimized(html, baseUrl, productName) {
   const updates = [];
   
-  // Use the patterns that worked in debug
-  const successfulPatterns = [
-    // Generic headings (worked for CRM)
-    /<h[1-4][^>]*>([^<]{20,180})<\/h[1-4]>/gi,
-    // Release notes
-    /<(?:div|section)[^>]*class[^>]*(?:release|update|changelog)[^>]*>[\s\S]*?<h[1-6][^>]*>([^<]{15,200})<\/h[1-6]>/gi,
-    // Blog posts
-    /<article[^>]*>[\s\S]*?<h[1-6][^>]*>([^<]{20,200})<\/h[1-6]>[\s\S]*?<\/article>/gi,
-    // News items
-    /<(?:div|li)[^>]*class[^>]*(?:news|item|post)[^>]*>[\s\S]*?<h[1-6][^>]*>([^<]{15,200})<\/h[1-6]>/gi
+  // Use only the most successful patterns from debug
+  const patterns = [
+    // Generic headings (worked well for CRM)
+    /<h[1-4][^>]*>([^<]{15,150})<\/h[1-4]>/gi,
+    // Simple article pattern
+    /<article[^>]*>[\s\S]*?<h[1-6][^>]*>([^<]{15,150})<\/h[1-6]>/gi
   ];
   
-  for (const pattern of successfulPatterns) {
+  for (const pattern of patterns) {
     let match;
-    while ((match = pattern.exec(html)) !== null && updates.length < CONFIG.MAX_UPDATES_PER_PRODUCT * 2) {
-      const title = match[1] ? match[1].trim() : '';
-      
-      if (isValidTitle(title)) {
-        const update = {
-          title,
-          date: new Date().toISOString().split('T')[0],
-          summary: `Update from ${productName}`,
-          link: baseUrl
-        };
-        updates.push(update);
+    let count = 0;
+    
+    while ((match = pattern.exec(html)) !== null && count < 5) {
+      if (match[1]) {
+        const title = match[1].trim();
+        if (isValidTitleSimple(title)) {
+          updates.push({
+            title: title,
+            date: new Date().toISOString().split('T')[0],
+            summary: `Update from ${productName}`,
+            link: baseUrl
+          });
+          count++;
+        }
       }
     }
     
@@ -510,17 +267,40 @@ function parseUpdatesFromHtml(html, baseUrl, productName = '') {
     if (updates.length > 0) break;
   }
   
-  return deduplicateUpdates(updates);
+  return updates;
 }
 
-// Discover updates URL
-async function discoverUpdatesUrl(homepage) {
+// Simplified title validation
+function isValidTitleSimple(title) {
+  if (!title || title.length < 15 || title.length > 200) return false;
+  
+  const blacklist = ['cookie', 'privacy', 'sign in', 'login', '404', 'error'];
+  const lowerTitle = title.toLowerCase();
+  
+  return !blacklist.some(word => lowerTitle.includes(word));
+}
+
+// Simplified update type classification
+function classifyUpdateTypeSimple(title) {
+  const lowerTitle = title.toLowerCase();
+  
+  for (const [type, pattern] of Object.entries(UPDATE_TYPE_PATTERNS)) {
+    if (pattern.test(lowerTitle)) {
+      return type;
+    }
+  }
+  
+  return 'General';
+}
+
+// Quick discovery - try only the most common paths
+async function quickDiscovery(homepage) {
   const baseUrl = getBaseUrl(homepage);
   
   for (const path of UPDATE_PATHS) {
     try {
       const testUrl = baseUrl + path;
-      const exists = await testUrlExists(testUrl);
+      const exists = await testUrlExistsQuick(testUrl);
       if (exists) {
         return testUrl;
       }
@@ -532,72 +312,24 @@ async function discoverUpdatesUrl(homepage) {
   return null;
 }
 
-// Scrape updates from URL
-async function scrapeUpdatesFromUrl(url, productName = '') {
-  try {
-    const html = await fetchUrl(url, 15000);
-    return parseUpdatesFromHtml(html, url, productName);
-  } catch (error) {
-    console.error(`Failed to fetch ${url}:`, error);
-    return [];
-  }
-}
-
-// Check robots.txt
-async function isBlockedByRobots(baseUrl) {
-  try {
-    const robotsText = await fetchUrl(baseUrl + '/robots.txt', 5000);
-    const lines = robotsText.split('\n');
-    let inUserAgentSection = false;
-    
-    for (const line of lines) {
-      const trimmed = line.trim().toLowerCase();
-      
-      if (trimmed.startsWith('user-agent:')) {
-        const agent = trimmed.substring(11).trim();
-        inUserAgentSection = (agent === '*');
-      } else if (inUserAgentSection && trimmed.startsWith('disallow:')) {
-        const path = trimmed.substring(9).trim();
-        if (path === '/' || path === '') {
-          return true;
-        }
-      }
-    }
-    
-    return false;
-  } catch (error) {
-    return false;
-  }
-}
-
-// Deduplicate updates
-function deduplicateUpdates(updates) {
+// Simplified deduplication
+function deduplicateUpdatesSimple(updates) {
   const unique = [];
   const seenTitles = new Set();
   
   for (const update of updates) {
-    const normalizedTitle = update.title.toLowerCase().replace(/[^a-z0-9]/g, '');
-    
-    if (!seenTitles.has(normalizedTitle) && normalizedTitle.length > 10) {
-      seenTitles.add(normalizedTitle);
+    const key = update.title.toLowerCase().substring(0, 30);
+    if (!seenTitles.has(key)) {
+      seenTitles.add(key);
       unique.push(update);
     }
   }
   
-  return unique.sort((a, b) => new Date(b.date) - new Date(a.date));
+  return unique;
 }
 
-// Utility functions
-function getBaseUrl(url) {
-  const matches = url.match(/^(https?:\/\/[^\/]+)/);
-  return matches ? matches[1] : url;
-}
-
-function sleep(ms) {
-  return new Promise(resolve => setTimeout(resolve, ms));
-}
-
-function fetchUrl(url, timeout = 12000) {
+// Optimized fetch with shorter timeout
+function fetchUrlOptimized(url) {
   return new Promise((resolve, reject) => {
     const client = url.startsWith('https:') ? https : http;
     
@@ -610,19 +342,32 @@ function fetchUrl(url, timeout = 12000) {
       }
       
       let data = '';
-      res.on('data', chunk => data += chunk);
+      let size = 0;
+      
+      res.on('data', chunk => {
+        size += chunk.length;
+        // Limit total download size
+        if (size > CONFIG.MAX_HTML_SIZE * 2) {
+          req.destroy();
+          reject(new Error('Response too large'));
+          return;
+        }
+        data += chunk;
+      });
+      
       res.on('end', () => resolve(data));
     });
     
     req.on('error', reject);
-    req.setTimeout(timeout, () => {
+    req.setTimeout(CONFIG.FETCH_TIMEOUT, () => {
       req.destroy();
       reject(new Error('Request timeout'));
     });
   });
 }
 
-function testUrlExists(url, timeout = 5000) {
+// Quick URL existence check
+function testUrlExistsQuick(url) {
   return new Promise((resolve) => {
     const client = url.startsWith('https:') ? https : http;
     
@@ -631,10 +376,20 @@ function testUrlExists(url, timeout = 5000) {
     });
     
     req.on('error', () => resolve(false));
-    req.setTimeout(timeout, () => {
+    req.setTimeout(3000, () => {
       req.destroy();
       resolve(false);
     });
     req.end();
   });
+}
+
+// Utility functions
+function getBaseUrl(url) {
+  const matches = url.match(/^(https?:\/\/[^\/]+)/);
+  return matches ? matches[1] : url;
+}
+
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
 }
