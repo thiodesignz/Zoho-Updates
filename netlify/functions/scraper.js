@@ -1,14 +1,22 @@
 /**
- * Enhanced Netlify Function - Always Shows Last Available Update
- * This version tries harder to find content and shows the most recent update found
+ * Enhanced Netlify Function - Includes Zoho News & Blog Sources
+ * Now scrapes from general Zoho news sources in addition to product-specific pages
  */
 
 const https = require('https');
 const http = require('http');
 
-// Configuration with explicit URLs found in research
+// Configuration with explicit URLs + general news sources
 const CONFIG = {
   PRODUCTS: [
+    // General Zoho News Sources (NEW)
+    { name: 'Zoho Blog', homepage: 'https://www.zoho.com/blog/', updates_url: 'https://www.zoho.com/blog/', source_type: 'explicit' },
+    { name: 'Zoho Community News', homepage: 'https://help.zoho.com/portal/en/community', updates_url: 'https://help.zoho.com/portal/en/community', source_type: 'explicit' },
+    { name: 'Zoho Press Releases', homepage: 'https://www.zoho.com/press.html', updates_url: 'https://www.zoho.com/press.html', source_type: 'explicit' },
+    { name: 'Zoho In The News', homepage: 'https://www.zoho.com/inthenews.html', updates_url: 'https://www.zoho.com/inthenews.html', source_type: 'explicit' },
+    { name: 'Zoho Newsletter', homepage: 'https://www.zoho.com/newsletter.html', updates_url: 'https://www.zoho.com/newsletter.html', source_type: 'explicit' },
+    { name: 'Zoho Creator News', homepage: 'https://help.zoho.com/portal/en/community/zoho-creator/news-and-updates', updates_url: 'https://help.zoho.com/portal/en/community/zoho-creator/news-and-updates', source_type: 'explicit' },
+    
     // CRM & Sales
     { name: 'Zoho CRM', homepage: 'https://www.zoho.com/crm/', updates_url: 'https://www.zoho.com/crm/whats-new/release-notes.html' },
     { name: 'Zoho SalesIQ', homepage: 'https://www.zoho.com/salesiq/', updates_url: null },
@@ -72,11 +80,11 @@ const CONFIG = {
   ],
   
   USER_AGENT: 'ZohoUpdatesBot/1.0',
-  REQUEST_DELAY: 2000,
-  MAX_UPDATES_PER_PRODUCT: 5
+  REQUEST_DELAY: 1500, // Slightly faster since we have more sources
+  MAX_UPDATES_PER_PRODUCT: 3 // Reduced to handle more sources
 };
 
-const UPDATE_PATHS = ['/whats-new', '/whatsnew', '/updates', '/release-notes', '/release-notes/', '/changelog', '/blog'];
+const UPDATE_PATHS = ['/whats-new', '/whatsnew', '/updates', '/release-notes', '/release-notes/', '/changelog', '/blog', '/news'];
 
 // Main Netlify function handler
 exports.handler = async (event, context) => {
@@ -100,15 +108,15 @@ exports.handler = async (event, context) => {
   }
 
   try {
-    console.log('Starting enhanced scrape...');
+    console.log('Starting enhanced scrape with news sources...');
     
     const results = {
       fetched_at: new Date().toISOString(),
       products: []
     };
 
-    // Process products (limit for function timeout)
-    const productsToProcess = CONFIG.PRODUCTS.slice(0, 15);
+    // Process products - including news sources
+    const productsToProcess = CONFIG.PRODUCTS.slice(0, 20); // Increased limit
     
     for (let i = 0; i < productsToProcess.length; i++) {
       const product = productsToProcess[i];
@@ -182,7 +190,7 @@ async function scrapeProductUpdatesEnhanced(product) {
     // Try explicit URL first
     if (updatesUrl) {
       console.log(`Trying explicit URL: ${updatesUrl}`);
-      const updates = await scrapeUpdatesFromUrl(updatesUrl);
+      const updates = await scrapeUpdatesFromUrl(updatesUrl, product.name);
       allUpdates = allUpdates.concat(updates);
       result.updates_url = updatesUrl;
     }
@@ -195,7 +203,7 @@ async function scrapeProductUpdatesEnhanced(product) {
       if (updatesUrl) {
         result.updates_url = updatesUrl;
         result.source_type = 'discovered';
-        const discoveredUpdates = await scrapeUpdatesFromUrl(updatesUrl);
+        const discoveredUpdates = await scrapeUpdatesFromUrl(updatesUrl, product.name);
         allUpdates = allUpdates.concat(discoveredUpdates);
       }
     }
@@ -225,29 +233,45 @@ async function scrapeProductUpdatesEnhanced(product) {
   return result;
 }
 
-// Enhanced homepage scraping - looks for any content that might be updates
+// Enhanced homepage/blog scraping for news sources
 async function scrapeHomepageForUpdates(homepage, productName) {
   try {
-    const html = await fetchUrl(homepage, 10000);
+    const html = await fetchUrl(homepage, 12000);
     const updates = [];
     
-    // Look for news/updates sections
+    // Enhanced patterns for news/blog sites
     const newsPatterns = [
-      /<(?:div|section|article)[^>]*(?:news|update|announcement|release)[^>]*>[\s\S]*?<\/(?:div|section|article)>/gi,
-      /<(?:h[1-6])[^>]*>([^<]*(?:news|update|new|release|announcement|feature)[^<]*)<\/h[1-6]>/gi,
-      /<(?:div|p)[^>]*class[^>]*(?:news|update|latest)[^>]*>[\s\S]*?<\/(?:div|p)>/gi
+      // Blog post patterns
+      /<article[^>]*>[\s\S]*?<h[1-6][^>]*>([^<]{20,200})<\/h[1-6]>[\s\S]*?<\/article>/gi,
+      // News item patterns
+      /<(?:div|li)[^>]*class[^>]*(?:post|article|news|item)[^>]*>[\s\S]*?<h[1-6][^>]*>([^<]{15,150})<\/h[1-6]>[\s\S]*?<\/(?:div|li)>/gi,
+      // Press release patterns
+      /<(?:div|section)[^>]*class[^>]*(?:press|release|announcement)[^>]*>[\s\S]*?<h[1-6][^>]*>([^<]{20,200})<\/h[1-6]>/gi,
+      // General heading patterns
+      /<h[1-4][^>]*>([^<]*(?:release|update|new|announcement|feature|launch)[^<]*)<\/h[1-4]>/gi
     ];
     
     for (const pattern of newsPatterns) {
       let match;
-      while ((match = pattern.exec(html)) !== null && updates.length < 3) {
+      while ((match = pattern.exec(html)) !== null && updates.length < 5) {
         if (match[1]) {
           const title = match[1].trim();
-          if (title.length > 10 && title.length < 200) {
+          if (title.length > 15 && title.length < 250) {
+            
+            // Extract date from surrounding context
+            const contextStart = Math.max(0, match.index - 500);
+            const contextEnd = Math.min(html.length, match.index + 1000);
+            const context = html.substring(contextStart, contextEnd);
+            
+            let date = extractDateFromContext(context);
+            
+            // Extract better summary
+            let summary = extractSummaryFromContext(context, title);
+            
             updates.push({
               title: title,
-              date: new Date().toISOString().split('T')[0],
-              summary: 'Latest information from homepage',
+              date: date,
+              summary: summary,
               link: homepage
             });
           }
@@ -258,19 +282,19 @@ async function scrapeHomepageForUpdates(homepage, productName) {
     // If no news patterns found, look for any recent content
     if (updates.length === 0) {
       const generalPatterns = [
-        /<h[1-4][^>]*>([^<]{20,150})<\/h[1-4]>/gi,
-        /<(?:div|p)[^>]*class[^>]*(?:feature|highlight)[^>]*>[\s\S]*?<h[1-6][^>]*>([^<]{15,100})<\/h[1-6]>/gi
+        /<h[1-4][^>]*>([^<]{20,180})<\/h[1-4]>/gi,
+        /<(?:div|p)[^>]*class[^>]*(?:title|headline)[^>]*>[\s\S]*?<[^>]*>([^<]{20,150})<\/[^>]*>/gi
       ];
       
       for (const pattern of generalPatterns) {
         let match;
-        while ((match = pattern.exec(html)) !== null && updates.length < 2) {
+        while ((match = pattern.exec(html)) !== null && updates.length < 3) {
           const title = match[1].trim();
-          if (title.length > 15 && !title.toLowerCase().includes('cookie')) {
+          if (title.length > 20 && !title.toLowerCase().includes('cookie') && !title.toLowerCase().includes('privacy')) {
             updates.push({
-              title: `${productName}: ${title}`,
+              title: title,
               date: new Date().toISOString().split('T')[0],
-              summary: 'Recent content from product homepage',
+              summary: `Latest from ${productName}`,
               link: homepage
             });
           }
@@ -286,27 +310,75 @@ async function scrapeHomepageForUpdates(homepage, productName) {
   }
 }
 
-// Enhanced HTML parsing with multiple strategies
-function parseUpdatesFromHtml(html, baseUrl) {
-  const updates = [];
-  
-  // Strategy 1: Look for structured update content
-  const structuredPatterns = [
-    // Release notes and changelog patterns
-    /<(?:div|article|section)[^>]*(?:release|update|changelog|news)[^>]*>[\s\S]*?<h[1-6][^>]*>([^<]+)<\/h[1-6]>[\s\S]*?<\/(?:div|article|section)>/gi,
-    // List item updates
-    /<li[^>]*>[\s\S]*?<(?:h[1-6]|strong|b)[^>]*>([^<]+)<\/(?:h[1-6]|strong|b)>[\s\S]*?<\/li>/gi,
-    // Date-based entries
-    /<(?:div|p)[^>]*>[^<]*(?:\d{4}[-\/]\d{1,2}[-\/]\d{1,2}|\w+\s+\d{1,2},?\s+\d{4})[^<]*<\/(?:div|p)>[\s\S]*?<h[1-6][^>]*>([^<]+)<\/h[1-6]>/gi
+// Enhanced date extraction
+function extractDateFromContext(context) {
+  const datePatterns = [
+    /(\d{4}[-\/]\d{1,2}[-\/]\d{1,2})/,
+    /(\d{1,2}[-\/]\d{1,2}[-\/]\d{4})/,
+    /((?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\w*\s+\d{1,2},?\s+\d{4})/i,
+    /((?:January|February|March|April|May|June|July|August|September|October|November|December)\s+\d{1,2},?\s+\d{4})/i,
+    /(\d{1,2}\s+(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\w*\s+\d{4})/i
   ];
   
-  for (const pattern of structuredPatterns) {
+  for (const pattern of datePatterns) {
+    const match = context.match(pattern);
+    if (match) {
+      try {
+        const parsedDate = new Date(match[1]);
+        if (!isNaN(parsedDate.getTime())) {
+          return parsedDate.toISOString().split('T')[0];
+        }
+      } catch (e) {
+        continue;
+      }
+    }
+  }
+  
+  return new Date().toISOString().split('T')[0];
+}
+
+// Enhanced summary extraction
+function extractSummaryFromContext(context, title) {
+  const textContent = context.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+  
+  // Remove the title from text content
+  const withoutTitle = textContent.replace(title, '').trim();
+  
+  // Find sentences after the title
+  const sentences = withoutTitle.split(/[.!?]+/).filter(s => s.trim().length > 20);
+  
+  if (sentences[0] && sentences[0].length > 20) {
+    let summary = sentences[0].trim();
+    if (summary.length > 200) {
+      summary = summary.substring(0, 200) + '...';
+    }
+    return summary;
+  }
+  
+  return 'Recent update from Zoho - click to read more';
+}
+
+// Enhanced HTML parsing with multiple strategies
+function parseUpdatesFromHtml(html, baseUrl, productName = '') {
+  const updates = [];
+  
+  // Strategy 1: Look for blog/news specific patterns
+  const blogPatterns = [
+    // Blog post entries
+    /<(?:article|div)[^>]*class[^>]*(?:post|entry|article)[^>]*>[\s\S]*?<h[1-6][^>]*>([^<]+)<\/h[1-6]>[\s\S]*?<\/(?:article|div)>/gi,
+    // News items
+    /<(?:div|li)[^>]*class[^>]*(?:news|item|update)[^>]*>[\s\S]*?<h[1-6][^>]*>([^<]+)<\/h[1-6]>/gi,
+    // Community posts
+    /<(?:div|section)[^>]*class[^>]*(?:topic|community)[^>]*>[\s\S]*?<h[1-6][^>]*>([^<]+)<\/h[1-6]>/gi
+  ];
+  
+  for (const pattern of blogPatterns) {
     let match;
-    while ((match = pattern.exec(html)) !== null && updates.length < CONFIG.MAX_UPDATES_PER_PRODUCT * 3) {
+    while ((match = pattern.exec(html)) !== null && updates.length < CONFIG.MAX_UPDATES_PER_PRODUCT * 2) {
       const updateHtml = match[0];
       const title = match[1] ? match[1].trim() : '';
       
-      if (title && title.length > 10 && title.length < 300) {
+      if (title && title.length > 15 && title.length < 300) {
         const update = parseUpdateItem(updateHtml, baseUrl, title);
         if (update) {
           updates.push(update);
@@ -315,18 +387,18 @@ function parseUpdatesFromHtml(html, baseUrl) {
     }
   }
   
-  // Strategy 2: If no structured content, look for any headings
+  // Strategy 2: Generic heading extraction
   if (updates.length === 0) {
-    const headingPattern = /<h[1-6][^>]*>([^<]{15,200})<\/h[1-6]>/gi;
+    const headingPattern = /<h[1-6][^>]*>([^<]{20,200})<\/h[1-6]>/gi;
     let match;
     
-    while ((match = headingPattern.exec(html)) !== null && updates.length < 5) {
+    while ((match = headingPattern.exec(html)) !== null && updates.length < 3) {
       const title = match[1].trim();
       if (title && !title.toLowerCase().includes('cookie') && !title.toLowerCase().includes('privacy')) {
         updates.push({
           title,
           date: new Date().toISOString().split('T')[0],
-          summary: 'Recent content found on updates page',
+          summary: `Latest update from ${productName || 'Zoho'}`,
           link: baseUrl
         });
       }
@@ -336,10 +408,9 @@ function parseUpdatesFromHtml(html, baseUrl) {
   return deduplicateUpdates(updates);
 }
 
-// Improved update parsing
+// Rest of the utility functions remain the same...
 function parseUpdateItem(html, baseUrl, title = null) {
   try {
-    // Extract title if not provided
     if (!title) {
       const titleMatch = html.match(/<h[1-6][^>]*>([^<]+)<\/h[1-6]>/i) || 
                         html.match(/<(?:strong|b)[^>]*>([^<]+)<\/(?:strong|b)>/i);
@@ -348,45 +419,9 @@ function parseUpdateItem(html, baseUrl, title = null) {
     
     if (title.length < 5) return null;
     
-    // Extract date with better patterns
-    let date = new Date().toISOString().split('T')[0];
-    const datePatterns = [
-      /(\d{4}[-\/]\d{1,2}[-\/]\d{1,2})/,
-      /(\d{1,2}[-\/]\d{1,2}[-\/]\d{4})/,
-      /(\w+\s+\d{1,2},?\s+\d{4})/,
-      /((?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\w*\s+\d{1,2},?\s+\d{4})/i
-    ];
+    let date = extractDateFromContext(html);
+    let summary = extractSummaryFromContext(html, title);
     
-    for (const pattern of datePatterns) {
-      const dateMatch = html.match(pattern);
-      if (dateMatch) {
-        try {
-          const parsedDate = new Date(dateMatch[1]);
-          if (!isNaN(parsedDate.getTime())) {
-            date = parsedDate.toISOString().split('T')[0];
-            break;
-          }
-        } catch (e) {
-          // Continue to next pattern
-        }
-      }
-    }
-    
-    // Extract summary with better logic
-    let summary = 'Click to view details';
-    const textContent = html.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
-    
-    if (textContent.length > title.length + 20) {
-      const remainingText = textContent.replace(title, '').trim();
-      const sentences = remainingText.split(/[.!?]+/).filter(s => s.trim().length > 10);
-      
-      if (sentences[0] && sentences[0].length > 10) {
-        summary = sentences[0].trim().substring(0, 200);
-        if (sentences[0].length > 200) summary += '...';
-      }
-    }
-    
-    // Extract link
     let link = baseUrl;
     const linkMatch = html.match(/<a[^>]+href=["']([^"']+)["']/i);
     if (linkMatch) {
@@ -407,7 +442,6 @@ function parseUpdateItem(html, baseUrl, title = null) {
   }
 }
 
-// Deduplicate updates by title similarity
 function deduplicateUpdates(updates) {
   const unique = [];
   const seenTitles = new Set();
@@ -415,17 +449,15 @@ function deduplicateUpdates(updates) {
   for (const update of updates) {
     const normalizedTitle = update.title.toLowerCase().replace(/[^a-z0-9]/g, '');
     
-    if (!seenTitles.has(normalizedTitle)) {
+    if (!seenTitles.has(normalizedTitle) && normalizedTitle.length > 10) {
       seenTitles.add(normalizedTitle);
       unique.push(update);
     }
   }
   
-  // Sort by date (newest first)
   return unique.sort((a, b) => new Date(b.date) - new Date(a.date));
 }
 
-// Rest of the utility functions remain the same...
 async function isBlockedByRobots(baseUrl) {
   try {
     const robotsText = await fetchUrl(baseUrl + '/robots.txt', 5000);
@@ -464,17 +496,17 @@ async function discoverUpdatesUrl(homepage) {
         return testUrl;
       }
     } catch (e) {
-      // Continue trying
+      continue;
     }
   }
   
   return null;
 }
 
-async function scrapeUpdatesFromUrl(url) {
+async function scrapeUpdatesFromUrl(url, productName = '') {
   try {
-    const html = await fetchUrl(url, 12000);
-    return parseUpdatesFromHtml(html, url);
+    const html = await fetchUrl(url, 15000);
+    return parseUpdatesFromHtml(html, url, productName);
   } catch (error) {
     console.error(`Failed to fetch ${url}:`, error);
     return [];
@@ -490,7 +522,7 @@ function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-function fetchUrl(url, timeout = 10000) {
+function fetchUrl(url, timeout = 12000) {
   return new Promise((resolve, reject) => {
     const client = url.startsWith('https:') ? https : http;
     
