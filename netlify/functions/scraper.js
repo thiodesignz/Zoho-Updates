@@ -1,28 +1,123 @@
 /**
- * DEBUG VERSION - Enhanced Netlify Function with Detailed Logging
- * This version will help us understand why updates aren't being found
+ * Production Zoho Updates Scraper - Final Working Version
+ * Based on successful debug results with optimized patterns
  */
 
 const https = require('https');
 const http = require('http');
 
-// Test with a smaller, focused set first
+// Complete configuration with all requested sources
 const CONFIG = {
   PRODUCTS: [
-    // Test with known working sources first
+    // News & General Sources (Priority - Most content-rich)
     { name: 'Zoho Blog', homepage: 'https://www.zoho.com/blog/', updates_url: 'https://www.zoho.com/blog/', category: 'News' },
-    { name: 'Zoho CRM - Homepage Test', homepage: 'https://www.zoho.com/crm/', updates_url: null, category: 'CRM & Sales' },
-    { name: 'Zoho CRM - Updates Page', homepage: 'https://www.zoho.com/crm/', updates_url: 'https://www.zoho.com/crm/whats-new/', category: 'CRM & Sales' },
+    { name: 'Zoho Community', homepage: 'https://help.zoho.com/portal/en/community', updates_url: 'https://help.zoho.com/portal/en/community', category: 'News' },
+    { name: 'Zoho Press Releases', homepage: 'https://www.zoho.com/press.html', updates_url: 'https://www.zoho.com/press.html', category: 'News' },
+    { name: 'Zoho In The News', homepage: 'https://www.zoho.com/inthenews.html', updates_url: 'https://www.zoho.com/inthenews.html', category: 'News' },
+    { name: 'Zoho Newsletter', homepage: 'https://www.zoho.com/newsletter.html', updates_url: 'https://www.zoho.com/newsletter.html', category: 'News' },
+    { name: 'Zoho Creator Community News', homepage: 'https://help.zoho.com/portal/en/community/zoho-creator/news-and-updates', updates_url: 'https://help.zoho.com/portal/en/community/zoho-creator/news-and-updates', category: 'News' },
+    { name: 'Zoho News Details', homepage: 'https://www.zoho.com/inthenews-detail.html', updates_url: 'https://www.zoho.com/inthenews-detail.html', category: 'News' },
+    { name: 'Zoho Influence News', homepage: 'https://www.zoho.com/r/influence/in-the-news', updates_url: 'https://www.zoho.com/r/influence/in-the-news', category: 'News' },
+    
+    // CRM & Sales - Use homepage scraping since it works better
+    { name: 'Zoho CRM', homepage: 'https://www.zoho.com/crm/', updates_url: null, category: 'CRM & Sales' },
+    { name: 'Zoho SalesIQ', homepage: 'https://www.zoho.com/salesiq/', updates_url: null, category: 'CRM & Sales' },
+    { name: 'Zoho Campaigns', homepage: 'https://www.zoho.com/campaigns/', updates_url: null, category: 'CRM & Sales' },
+    { name: 'Zoho Social', homepage: 'https://www.zoho.com/social/', updates_url: null, category: 'CRM & Sales' },
+    { name: 'Zoho Motivator', homepage: 'https://www.zoho.com/motivator/', updates_url: null, category: 'CRM & Sales' },
+    
+    // Finance
+    { name: 'Zoho Books', homepage: 'https://www.zoho.com/books/', updates_url: 'https://www.zoho.com/us/books/whats-new.html', category: 'Finance' },
+    { name: 'Zoho Invoice', homepage: 'https://www.zoho.com/invoice/', updates_url: null, category: 'Finance' },
+    { name: 'Zoho Billing', homepage: 'https://www.zoho.com/billing/', updates_url: null, category: 'Finance' },
+    { name: 'Zoho Expense', homepage: 'https://www.zoho.com/expense/', updates_url: null, category: 'Finance' },
+    { name: 'Zoho Inventory', homepage: 'https://www.zoho.com/inventory/', updates_url: null, category: 'Finance' },
+    { name: 'Zoho Subscriptions', homepage: 'https://www.zoho.com/subscriptions/', updates_url: null, category: 'Finance' },
+    
+    // Support & Service
+    { name: 'Zoho Desk', homepage: 'https://www.zoho.com/desk/', updates_url: 'https://www.zoho.com/desk/release-notes.html', category: 'Support' },
+    { name: 'Zoho FSM', homepage: 'https://www.zoho.com/fieldservice/', updates_url: 'https://www.zoho.com/fsm/release-notes.html', category: 'Support' },
+    { name: 'Zoho Assist', homepage: 'https://www.zoho.com/assist/', updates_url: null, category: 'Support' },
+    { name: 'Zoho Lens', homepage: 'https://www.zoho.com/lens/', updates_url: null, category: 'Support' },
+    
+    // Productivity & Collaboration
+    { name: 'Zoho Mail', homepage: 'https://www.zoho.com/mail/', updates_url: 'https://www.zoho.com/workplace/whats-new.html', category: 'Productivity' },
+    { name: 'Zoho WorkDrive', homepage: 'https://www.zoho.com/workdrive/', updates_url: 'https://www.zoho.com/workplace/whats-new.html', category: 'Productivity' },
+    { name: 'Zoho Writer', homepage: 'https://www.zoho.com/writer/', updates_url: 'https://www.zoho.com/workplace/whats-new.html', category: 'Productivity' },
+    { name: 'Zoho Sheet', homepage: 'https://www.zoho.com/sheet/', updates_url: 'https://www.zoho.com/workplace/whats-new.html', category: 'Productivity' },
+    { name: 'Zoho Show', homepage: 'https://www.zoho.com/show/', updates_url: 'https://www.zoho.com/workplace/whats-new.html', category: 'Productivity' },
+    { name: 'Zoho Cliq', homepage: 'https://www.zoho.com/cliq/', updates_url: 'https://www.zoho.com/workplace/whats-new.html', category: 'Productivity' },
+    { name: 'Zoho Connect', homepage: 'https://www.zoho.com/connect/', updates_url: null, category: 'Productivity' },
+    { name: 'Zoho Projects', homepage: 'https://www.zoho.com/projects/', updates_url: null, category: 'Productivity' },
+    { name: 'Zoho Meeting', homepage: 'https://www.zoho.com/meeting/', updates_url: null, category: 'Productivity' },
+    
+    // Development & Analytics
     { name: 'Zoho Creator', homepage: 'https://www.zoho.com/creator/', updates_url: 'https://www.zoho.com/creator/release-notes/', category: 'Development' },
-    { name: 'Zoho Books', homepage: 'https://www.zoho.com/books/', updates_url: 'https://www.zoho.com/us/books/whats-new.html', category: 'Finance' }
+    { name: 'Zoho Analytics', homepage: 'https://www.zoho.com/analytics/', updates_url: 'https://www.zoho.com/analytics/whats-new/release-notes.html', category: 'Development' },
+    { name: 'Zoho Flow', homepage: 'https://www.zoho.com/flow/', updates_url: 'https://www.zoho.com/flow/release-notes/', category: 'Development' },
+    { name: 'Zoho Deluge', homepage: 'https://www.zoho.com/deluge/', updates_url: 'https://www.zoho.com/deluge/help/release-notes.html', category: 'Development' },
+    { name: 'Zoho Forms', homepage: 'https://www.zoho.com/forms/', updates_url: null, category: 'Development' },
+    
+    // HR & Operations
+    { name: 'Zoho People', homepage: 'https://www.zoho.com/people/', updates_url: null, category: 'HR' },
+    { name: 'Zoho Recruit', homepage: 'https://www.zoho.com/recruit/', updates_url: null, category: 'HR' },
+    { name: 'Zoho Payroll', homepage: 'https://www.zoho.com/payroll/', updates_url: null, category: 'HR' },
+    { name: 'Zoho Bookings', homepage: 'https://www.zoho.com/bookings/', updates_url: 'https://www.zoho.com/bookings/help/release-notes.html', category: 'HR' },
+    { name: 'Zoho Sign', homepage: 'https://www.zoho.com/sign/', updates_url: null, category: 'HR' },
+    
+    // Marketing & Web
+    { name: 'Zoho Sites', homepage: 'https://www.zoho.com/sites/', updates_url: null, category: 'Marketing' },
+    { name: 'Zoho PageSense', homepage: 'https://www.zoho.com/pagesense/', updates_url: null, category: 'Marketing' },
+    { name: 'Zoho Backstage', homepage: 'https://www.zoho.com/backstage/', updates_url: null, category: 'Marketing' },
+    { name: 'Zoho Survey', homepage: 'https://www.zoho.com/survey/', updates_url: null, category: 'Marketing' },
+    
+    // Other
+    { name: 'Zoho One', homepage: 'https://www.zoho.com/one/', updates_url: null, category: 'Other' },
+    { name: 'Zoho Catalyst', homepage: 'https://catalyst.zoho.com/', updates_url: null, category: 'Development' }
   ],
   
   USER_AGENT: 'ZohoUpdatesBot/1.0',
-  REQUEST_DELAY: 2000, // Increased delay
+  REQUEST_DELAY: 1500,
   MAX_UPDATES_PER_PRODUCT: 5
 };
 
 const UPDATE_PATHS = ['/whats-new', '/whatsnew', '/updates', '/release-notes', '/changelog', '/blog', '/news'];
+
+// Update classification patterns (from debug success)
+const UPDATE_TYPE_PATTERNS = {
+  'New Features': [
+    /\b(new|introducing|launch|launched|added|released|announcing)\b/i,
+    /\bfeature\b/i,
+    /\bversion\s+\d+/i
+  ],
+  'Improvements': [
+    /\b(enhanced|improved|better|optimized|upgrade|updated)\b/i,
+    /\b(performance|speed|efficiency)\b/i
+  ],
+  'Bug Fixes': [
+    /\b(fixed|resolved|corrected|bug|issue|problem)\b/i,
+    /\bpatch\b/i
+  ],
+  'Security': [
+    /\b(security|patch|vulnerability|secure)\b/i,
+    /\b(authentication|authorization|encryption)\b/i
+  ],
+  'API Changes': [
+    /\bAPI\b/i,
+    /\b(integration|endpoint|webhook|developer)\b/i
+  ]
+};
+
+const PRIORITY_PATTERNS = {
+  'Critical': [
+    /\b(critical|urgent|important|security|vulnerability)\b/i,
+    /\b(major\s+bug|critical\s+fix)\b/i
+  ],
+  'Major': [
+    /\b(major|significant|release|version)\b/i,
+    /\b(new\s+feature|launch)\b/i
+  ]
+};
 
 // Main Netlify function handler
 exports.handler = async (event, context) => {
@@ -46,50 +141,55 @@ exports.handler = async (event, context) => {
   }
 
   try {
-    console.log('=== DEBUG SCRAPER STARTED ===');
+    console.log('Starting production scrape with working patterns...');
     
     const results = {
       fetched_at: new Date().toISOString(),
       products: [],
-      debug_info: {
-        total_processed: 0,
-        successful_scrapes: 0,
-        failed_scrapes: 0,
-        details: []
+      categories: getUniqueCategories(),
+      summary: {
+        total_products: 0,
+        products_with_updates: 0,
+        total_updates: 0,
+        by_category: {}
       }
     };
 
-    // Process each product with detailed logging
-    for (let i = 0; i < CONFIG.PRODUCTS.length; i++) {
-      const product = CONFIG.PRODUCTS[i];
-      console.log(`\n--- Processing ${i+1}/${CONFIG.PRODUCTS.length}: ${product.name} ---`);
+    // Process all products
+    const productsToProcess = CONFIG.PRODUCTS;
+    
+    for (let i = 0; i < productsToProcess.length; i++) {
+      const product = productsToProcess[i];
+      console.log(`Processing ${i+1}/${productsToProcess.length}: ${product.name}`);
       
       try {
-        const productResult = await scrapeProductWithDebug(product);
+        const productResult = await scrapeProductUpdatesEnhanced(product);
         results.products.push(productResult);
-        results.debug_info.total_processed++;
         
+        // Update summary statistics
+        results.summary.total_products++;
         if (productResult.updates && productResult.updates.length > 0) {
-          results.debug_info.successful_scrapes++;
-        } else {
-          results.debug_info.failed_scrapes++;
+          results.summary.products_with_updates++;
+          results.summary.total_updates += productResult.updates.length;
         }
         
-        results.debug_info.details.push({
-          product: product.name,
-          status: productResult.status,
-          updates_found: productResult.updates ? productResult.updates.length : 0,
-          error: productResult.error_message || null
-        });
+        // Category statistics
+        const category = productResult.category || 'Other';
+        if (!results.summary.by_category[category]) {
+          results.summary.by_category[category] = {
+            products: 0,
+            updates: 0
+          };
+        }
+        results.summary.by_category[category].products++;
+        results.summary.by_category[category].updates += productResult.updates ? productResult.updates.length : 0;
         
         // Rate limiting
-        if (i < CONFIG.PRODUCTS.length - 1) {
-          console.log(`Waiting ${CONFIG.REQUEST_DELAY}ms before next request...`);
+        if (i < productsToProcess.length - 1) {
           await sleep(CONFIG.REQUEST_DELAY);
         }
-        
       } catch (error) {
-        console.error(`ERROR processing ${product.name}:`, error);
+        console.error(`Error processing ${product.name}:`, error);
         results.products.push({
           name: product.name,
           homepage: product.homepage,
@@ -98,14 +198,10 @@ exports.handler = async (event, context) => {
           status: 'error',
           error_message: error.message
         });
-        results.debug_info.failed_scrapes++;
       }
     }
 
-    console.log('\n=== SCRAPING SUMMARY ===');
-    console.log(`Total processed: ${results.debug_info.total_processed}`);
-    console.log(`Successful: ${results.debug_info.successful_scrapes}`);
-    console.log(`Failed: ${results.debug_info.failed_scrapes}`);
+    console.log(`Scraping completed. Found ${results.summary.total_updates} updates across ${results.summary.products_with_updates} products`);
 
     return {
       statusCode: 200,
@@ -114,7 +210,7 @@ exports.handler = async (event, context) => {
     };
 
   } catch (error) {
-    console.error('FUNCTION ERROR:', error);
+    console.error('Function error:', error);
     return {
       statusCode: 500,
       headers,
@@ -128,12 +224,14 @@ exports.handler = async (event, context) => {
   }
 };
 
-// Enhanced scraping with debug information
-async function scrapeProductWithDebug(product) {
-  console.log(`Scraping: ${product.name}`);
-  console.log(`Homepage: ${product.homepage}`);
-  console.log(`Updates URL: ${product.updates_url || 'null (will auto-discover)'}`);
-  
+// Get unique categories from product list
+function getUniqueCategories() {
+  const categories = [...new Set(CONFIG.PRODUCTS.map(p => p.category || 'Other'))];
+  return categories.sort();
+}
+
+// Enhanced scraping function based on debug success
+async function scrapeProductUpdatesEnhanced(product) {
   const result = {
     name: product.name,
     homepage: product.homepage,
@@ -142,190 +240,167 @@ async function scrapeProductWithDebug(product) {
     updates: [],
     status: 'error',
     error_message: null,
-    source_type: product.updates_url ? 'explicit' : 'discovered',
-    debug_info: {
-      robots_checked: false,
-      robots_blocked: false,
-      urls_tried: [],
-      html_length: 0,
-      patterns_matched: 0
-    }
+    source_type: product.updates_url ? 'explicit' : 'discovered'
   };
 
   try {
     const baseUrl = getBaseUrl(product.homepage);
-    console.log(`Base URL: ${baseUrl}`);
     
     // Check robots.txt
-    console.log('Checking robots.txt...');
-    const robotsBlocked = await isBlockedByRobots(baseUrl);
-    result.debug_info.robots_checked = true;
-    result.debug_info.robots_blocked = robotsBlocked;
-    
-    if (robotsBlocked) {
-      console.log('❌ Blocked by robots.txt');
+    if (await isBlockedByRobots(baseUrl)) {
       result.status = 'source_blocked_by_robots';
       return result;
     }
-    console.log('✅ Robots.txt allows scraping');
 
     let allUpdates = [];
     let updatesUrl = product.updates_url;
     
     // Try explicit URL first
     if (updatesUrl) {
-      console.log(`Trying explicit URL: ${updatesUrl}`);
-      result.debug_info.urls_tried.push(updatesUrl);
-      const updates = await scrapeUrlWithDebug(updatesUrl, product.name, result.debug_info);
+      const updates = await scrapeUpdatesFromUrl(updatesUrl, product.name);
       allUpdates = allUpdates.concat(updates);
       result.updates_url = updatesUrl;
     }
     
     // If no explicit URL or no updates found, try discovery
     if (!updatesUrl || allUpdates.length === 0) {
-      console.log('Trying auto-discovery...');
-      updatesUrl = await discoverUpdatesUrl(product.homepage, result.debug_info);
+      updatesUrl = await discoverUpdatesUrl(product.homepage);
       
       if (updatesUrl) {
-        console.log(`✅ Discovered updates URL: ${updatesUrl}`);
         result.updates_url = updatesUrl;
         result.source_type = 'discovered';
-        const discoveredUpdates = await scrapeUrlWithDebug(updatesUrl, product.name, result.debug_info);
+        const discoveredUpdates = await scrapeUpdatesFromUrl(updatesUrl, product.name);
         allUpdates = allUpdates.concat(discoveredUpdates);
-      } else {
-        console.log('❌ No updates URL discovered');
       }
     }
     
-    // If still no updates, try scraping the homepage directly
+    // If still no updates, try scraping the homepage directly (this worked in debug!)
     if (allUpdates.length === 0) {
-      console.log('Trying homepage scraping...');
       result.updates_url = product.homepage;
-      result.debug_info.urls_tried.push(product.homepage);
-      const homepageUpdates = await scrapeUrlWithDebug(product.homepage, product.name, result.debug_info);
+      const homepageUpdates = await scrapeHomepageForUpdates(product.homepage, product.name);
       allUpdates = allUpdates.concat(homepageUpdates);
     }
     
-    // Process results
+    // Process and classify updates
     if (allUpdates.length > 0) {
-      console.log(`✅ Found ${allUpdates.length} updates`);
-      const uniqueUpdates = deduplicateUpdates(allUpdates);
+      const classifiedUpdates = allUpdates.map(update => ({
+        ...update,
+        type: classifyUpdateType(update.title, update.summary),
+        priority: classifyPriority(update.title, update.summary),
+        category: product.category || 'Other'
+      }));
+      
+      const uniqueUpdates = deduplicateUpdates(classifiedUpdates);
       result.updates = uniqueUpdates.slice(0, CONFIG.MAX_UPDATES_PER_PRODUCT);
       result.status = 'ok';
-      
-      // Log sample update
-      if (result.updates[0]) {
-        console.log(`Sample update: "${result.updates[0].title}"`);
-      }
     } else {
-      console.log('❌ No updates found');
       result.status = 'no_updates_found';
       result.error_message = 'No updates found on any checked pages';
     }
 
   } catch (error) {
-    console.error(`Scraping error for ${product.name}:`, error);
     result.error_message = error.message;
   }
 
   return result;
 }
 
-// Enhanced URL scraping with debug info
-async function scrapeUrlWithDebug(url, productName, debugInfo) {
-  try {
-    console.log(`Fetching: ${url}`);
-    const html = await fetchUrl(url, 15000);
-    debugInfo.html_length = html.length;
-    console.log(`HTML length: ${html.length} characters`);
-    
-    if (html.length < 100) {
-      console.log('⚠️ HTML content is very short, might be empty or error page');
-      return [];
-    }
-    
-    // Log a sample of the HTML to see what we're working with
-    const htmlSample = html.substring(0, 500).replace(/\s+/g, ' ');
-    console.log(`HTML sample: ${htmlSample}...`);
-    
-    const updates = parseUpdatesWithDebug(html, url, productName, debugInfo);
-    console.log(`Parsed ${updates.length} updates from this URL`);
-    
-    return updates;
-  } catch (error) {
-    console.error(`Failed to fetch ${url}:`, error);
-    return [];
-  }
-}
-
-// Enhanced HTML parsing with debug info
-function parseUpdatesWithDebug(html, baseUrl, productName, debugInfo) {
-  const updates = [];
-  let patternsMatched = 0;
+// Classify update type based on content
+function classifyUpdateType(title, summary = '') {
+  const text = `${title} ${summary}`.toLowerCase();
   
-  console.log('Trying different parsing patterns...');
+  const scores = {};
   
-  // Strategy 1: Look for common update patterns
-  const updatePatterns = [
-    // Release notes patterns
-    { name: 'Release Notes', pattern: /<(?:div|section|article)[^>]*class[^>]*(?:release|update|changelog)[^>]*>[\s\S]*?<h[1-6][^>]*>([^<]{15,200})<\/h[1-6]>/gi },
-    // Blog post patterns
-    { name: 'Blog Posts', pattern: /<article[^>]*>[\s\S]*?<h[1-6][^>]*>([^<]{20,200})<\/h[1-6]>[\s\S]*?<\/article>/gi },
-    // News patterns
-    { name: 'News Items', pattern: /<(?:div|li)[^>]*class[^>]*(?:news|item|post)[^>]*>[\s\S]*?<h[1-6][^>]*>([^<]{15,200})<\/h[1-6]>/gi },
-    // Generic heading patterns
-    { name: 'Generic Headings', pattern: /<h[1-4][^>]*>([^<]{20,180})<\/h[1-4]>/gi }
-  ];
-  
-  for (const patternInfo of updatePatterns) {
-    console.log(`Trying pattern: ${patternInfo.name}`);
-    let match;
-    let matchCount = 0;
+  for (const [type, patterns] of Object.entries(UPDATE_TYPE_PATTERNS)) {
+    scores[type] = 0;
     
-    while ((match = patternInfo.pattern.exec(html)) !== null && updates.length < 10) {
-      if (match[1]) {
-        const title = match[1].trim();
-        if (isValidTitle(title)) {
-          matchCount++;
-          patternsMatched++;
-          
-          const update = {
-            title: title,
-            date: extractDateFromContext(html, match.index) || new Date().toISOString().split('T')[0],
-            summary: `Update from ${productName}`,
-            link: baseUrl
-          };
-          
-          updates.push(update);
-          console.log(`  ✅ Found: "${title.substring(0, 50)}..."`);
-        }
+    for (const pattern of patterns) {
+      if (pattern.test(text)) {
+        scores[type]++;
       }
     }
-    
-    console.log(`  Pattern "${patternInfo.name}" found ${matchCount} matches`);
-    if (matchCount > 0) break; // Stop after first successful pattern
   }
   
-  debugInfo.patterns_matched = patternsMatched;
+  // Return the type with highest score, or 'General' if no matches
+  const maxScore = Math.max(...Object.values(scores));
+  if (maxScore === 0) return 'General';
   
-  if (updates.length === 0) {
-    console.log('❌ No updates found with any pattern');
-    // Try to find ANY headings for debugging
-    const anyHeadings = html.match(/<h[1-6][^>]*>([^<]+)<\/h[1-6]>/gi) || [];
-    console.log(`Found ${anyHeadings.length} total headings on page`);
-    if (anyHeadings.length > 0) {
-      console.log(`Sample headings: ${anyHeadings.slice(0, 3).map(h => h.replace(/<[^>]+>/g, '')).join(', ')}`);
+  return Object.keys(scores).find(type => scores[type] === maxScore);
+}
+
+// Classify update priority
+function classifyPriority(title, summary = '') {
+  const text = `${title} ${summary}`.toLowerCase();
+  
+  for (const [priority, patterns] of Object.entries(PRIORITY_PATTERNS)) {
+    for (const pattern of patterns) {
+      if (pattern.test(text)) {
+        return priority;
+      }
     }
   }
   
-  return deduplicateUpdates(updates);
+  return 'Normal';
+}
+
+// Enhanced homepage scraping based on debug success
+async function scrapeHomepageForUpdates(homepage, productName) {
+  try {
+    const html = await fetchUrl(homepage, 15000);
+    const updates = [];
+    
+    // Use the successful patterns from debug version
+    const workingPatterns = [
+      // Generic headings (this worked for CRM)
+      /<h[1-4][^>]*>([^<]{20,180})<\/h[1-4]>/gi,
+      // Article patterns
+      /<article[^>]*>[\s\S]*?<h[1-6][^>]*>([^<]{20,200})<\/h[1-6]>[\s\S]*?<\/article>/gi,
+      // News/update patterns
+      /<(?:div|section)[^>]*class[^>]*(?:news|update|post|article)[^>]*>[\s\S]*?<h[1-6][^>]*>([^<]{15,200})<\/h[1-6]>/gi,
+      // Blog patterns for news sources
+      /<(?:div|li)[^>]*class[^>]*(?:post|entry|item)[^>]*>[\s\S]*?<h[1-6][^>]*>([^<]{15,200})<\/h[1-6]>/gi
+    ];
+    
+    for (const pattern of workingPatterns) {
+      let match;
+      while ((match = pattern.exec(html)) !== null && updates.length < 8) {
+        if (match[1]) {
+          const title = match[1].trim();
+          if (isValidTitle(title)) {
+            const contextStart = Math.max(0, match.index - 300);
+            const contextEnd = Math.min(html.length, match.index + 300);
+            const context = html.substring(contextStart, contextEnd);
+            
+            let date = extractDateFromContext(context) || new Date().toISOString().split('T')[0];
+            let summary = extractSummaryFromContext(context, title);
+            let link = extractLinkFromContext(context, homepage);
+            
+            updates.push({
+              title: title,
+              date: date,
+              summary: summary,
+              link: link
+            });
+          }
+        }
+      }
+      
+      // Stop after first successful pattern to avoid duplicates
+      if (updates.length > 0) break;
+    }
+    
+    return updates;
+    
+  } catch (error) {
+    console.error(`Homepage scraping failed for ${homepage}: ${error}`);
+    return [];
+  }
 }
 
 // Validate if a title looks like a real update
 function isValidTitle(title) {
   if (!title || title.length < 10 || title.length > 300) return false;
   
-  // Filter out common non-update content
   const blacklist = [
     'cookie', 'privacy', 'terms', 'sign in', 'sign up', 'login', 'register',
     'home', 'about', 'contact', 'help', 'support', '404', 'error', 'page not found'
@@ -335,12 +410,8 @@ function isValidTitle(title) {
   return !blacklist.some(word => lowerTitle.includes(word));
 }
 
-// Extract date from surrounding context
-function extractDateFromContext(html, position) {
-  const contextStart = Math.max(0, position - 300);
-  const contextEnd = Math.min(html.length, position + 300);
-  const context = html.substring(contextStart, contextEnd);
-  
+// Extract date from context
+function extractDateFromContext(context) {
   const datePatterns = [
     /(\d{4}[-\/]\d{1,2}[-\/]\d{1,2})/,
     /(\d{1,2}[-\/]\d{1,2}[-\/]\d{4})/,
@@ -364,19 +435,93 @@ function extractDateFromContext(html, position) {
   return null;
 }
 
-// Discover updates URL with debug info
-async function discoverUpdatesUrl(homepage, debugInfo) {
+// Extract summary from context
+function extractSummaryFromContext(context, title) {
+  const textContent = context.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+  const withoutTitle = textContent.replace(title, '').trim();
+  
+  const sentences = withoutTitle.split(/[.!?]+/).filter(s => s.trim().length > 20);
+  
+  if (sentences[0] && sentences[0].length > 20) {
+    let summary = sentences[0].trim();
+    if (summary.length > 200) {
+      summary = summary.substring(0, 200) + '...';
+    }
+    return summary;
+  }
+  
+  return `Update from ${title.split(' ')[0]} - click to read more`;
+}
+
+// Extract link from context
+function extractLinkFromContext(context, fallbackUrl) {
+  const linkMatch = context.match(/<a[^>]+href=["']([^"']+)["']/i);
+  if (linkMatch && linkMatch[1]) {
+    let href = linkMatch[1];
+    
+    if (href.startsWith('/')) {
+      const baseUrl = getBaseUrl(fallbackUrl);
+      href = baseUrl + href;
+    } else if (!href.startsWith('http')) {
+      href = fallbackUrl;
+    }
+    
+    if (href.includes('zoho.com') && !href.includes('javascript:')) {
+      return href;
+    }
+  }
+  
+  return fallbackUrl;
+}
+
+// Enhanced HTML parsing with successful patterns
+function parseUpdatesFromHtml(html, baseUrl, productName = '') {
+  const updates = [];
+  
+  // Use the patterns that worked in debug
+  const successfulPatterns = [
+    // Generic headings (worked for CRM)
+    /<h[1-4][^>]*>([^<]{20,180})<\/h[1-4]>/gi,
+    // Release notes
+    /<(?:div|section)[^>]*class[^>]*(?:release|update|changelog)[^>]*>[\s\S]*?<h[1-6][^>]*>([^<]{15,200})<\/h[1-6]>/gi,
+    // Blog posts
+    /<article[^>]*>[\s\S]*?<h[1-6][^>]*>([^<]{20,200})<\/h[1-6]>[\s\S]*?<\/article>/gi,
+    // News items
+    /<(?:div|li)[^>]*class[^>]*(?:news|item|post)[^>]*>[\s\S]*?<h[1-6][^>]*>([^<]{15,200})<\/h[1-6]>/gi
+  ];
+  
+  for (const pattern of successfulPatterns) {
+    let match;
+    while ((match = pattern.exec(html)) !== null && updates.length < CONFIG.MAX_UPDATES_PER_PRODUCT * 2) {
+      const title = match[1] ? match[1].trim() : '';
+      
+      if (isValidTitle(title)) {
+        const update = {
+          title,
+          date: new Date().toISOString().split('T')[0],
+          summary: `Update from ${productName}`,
+          link: baseUrl
+        };
+        updates.push(update);
+      }
+    }
+    
+    // Stop after first successful pattern
+    if (updates.length > 0) break;
+  }
+  
+  return deduplicateUpdates(updates);
+}
+
+// Discover updates URL
+async function discoverUpdatesUrl(homepage) {
   const baseUrl = getBaseUrl(homepage);
   
   for (const path of UPDATE_PATHS) {
     try {
       const testUrl = baseUrl + path;
-      console.log(`Testing discovery URL: ${testUrl}`);
-      debugInfo.urls_tried.push(testUrl);
-      
       const exists = await testUrlExists(testUrl);
       if (exists) {
-        console.log(`✅ Found updates page: ${testUrl}`);
         return testUrl;
       }
     } catch (e) {
@@ -385,6 +530,17 @@ async function discoverUpdatesUrl(homepage, debugInfo) {
   }
   
   return null;
+}
+
+// Scrape updates from URL
+async function scrapeUpdatesFromUrl(url, productName = '') {
+  try {
+    const html = await fetchUrl(url, 15000);
+    return parseUpdatesFromHtml(html, url, productName);
+  } catch (error) {
+    console.error(`Failed to fetch ${url}:`, error);
+    return [];
+  }
 }
 
 // Check robots.txt
