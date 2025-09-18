@@ -14,7 +14,7 @@
             <p class="subtitle">Stay up-to-date with the latest features and improvements across all Zoho products</p>
         </header>
 
-        <!-- Controls -->
+        <!-- Enhanced Controls with Filters -->
         <div class="controls">
             <div class="search-container">
                 <input type="text" id="search" placeholder="Search products..." class="search-input">
@@ -32,11 +32,51 @@
                 Refresh
             </button>
         </div>
+        
+        <!-- New Filter Controls -->
+        <div class="filters">
+            <div class="filter-group">
+                <label class="filter-label">Category</label>
+                <select id="category-filter" class="filter-select">
+                    <option value="All">All Categories</option>
+                </select>
+            </div>
+            
+            <div class="filter-group">
+                <label class="filter-label">Update Type</label>
+                <select id="update-type-filter" class="filter-select">
+                    <option value="All">All Types</option>
+                </select>
+            </div>
+            
+            <div class="filter-group">
+                <label class="filter-label">Priority</label>
+                <select id="priority-filter" class="filter-select">
+                    <option value="All">All Priorities</option>
+                    <option value="Critical">Critical</option>
+                    <option value="Major">Major</option>
+                    <option value="Normal">Normal</option>
+                </select>
+            </div>
+        </div>
+        
+        <!-- Active Filters Display -->
+        <div id="active-filters" class="active-filters"></div>
 
         <!-- Status Bar -->
         <div class="status-bar">
             <div id="last-updated" class="last-updated"></div>
             <div id="cache-notice" class="cache-notice hidden">📱 Showing cached data</div>
+        </div>
+        
+        <!-- Category Statistics -->
+        <div id="category-stats" class="category-stats hidden">
+            <!-- Stats will be populated here -->
+        </div>
+        
+        <!-- Filter Summary -->
+        <div id="filter-summary" class="filter-summary hidden">
+            <!-- Filter summary will be populated here -->
         </div>
 
         <!-- Loading State -->
@@ -61,7 +101,7 @@
         <div id="empty-state" class="empty-state hidden">
             <div class="empty-icon">🔍</div>
             <h3>No products found</h3>
-            <p>Try adjusting your search terms.</p>
+            <p>Try adjusting your search terms or filters.</p>
         </div>
 
         <!-- Footer -->

@@ -1,6 +1,33 @@
 {
-  "name": "zoho-updates-tracker",
-  "version": "1.0.0",
-  "description": "Track latest updates for Zoho products",
-  "main": "index.html"
+  "name": "zoho-updates-tracker-enhanced",
+  "version": "2.0.0",
+  "description": "Enhanced Zoho Product Updates Tracker with Categorization and Filtering",
+  "main": "index.html",
+  "scripts": {
+    "dev": "netlify dev",
+    "build": "echo 'No build step required for static site'",
+    "deploy": "netlify deploy --prod"
+  },
+  "keywords": [
+    "zoho",
+    "updates",
+    "tracker",
+    "categorization",
+    "product-updates",
+    "netlify",
+    "serverless"
+  ],
+  "author": "Your Name",
+  "license": "MIT",
+  "dependencies": {},
+  "devDependencies": {
+    "netlify-cli": "^17.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/your-username/zoho-updates-tracker.git"
+  },
+  "netlify": {
+    "functions": "./netlify/functions"
+  }
 }

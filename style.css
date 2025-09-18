@@ -44,7 +44,7 @@ body {
 .controls {
     display: flex;
     gap: 15px;
-    margin-bottom: 30px;
+    margin-bottom: 20px;
     flex-wrap: wrap;
     align-items: center;
 }
@@ -115,6 +115,86 @@ body {
     transform: none;
 }
 
+/* Filter Controls */
+.filters {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    align-items: flex-end;
+}
+
+.filter-group {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.filter-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.9);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.filter-select {
+    padding: 8px 12px;
+    border: none;
+    border-radius: 8px;
+    background: white;
+    color: #4a5568;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    min-width: 140px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    transition: all 0.2s ease;
+}
+
+.filter-select:focus {
+    outline: none;
+    box-shadow: 0 2px 12px rgba(102, 126, 234, 0.3);
+}
+
+.filter-select:hover {
+    background: #f8f9ff;
+}
+
+/* Active Filters */
+.active-filters {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 15px;
+    flex-wrap: wrap;
+}
+
+.active-filter {
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    padding: 4px 12px;
+    border-radius: 16px;
+    font-size: 11px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    backdrop-filter: blur(10px);
+}
+
+.active-filter .remove-filter {
+    cursor: pointer;
+    font-weight: bold;
+    margin-left: 3px;
+    padding: 0 2px;
+    border-radius: 50%;
+    transition: background 0.2s ease;
+}
+
+.active-filter .remove-filter:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
 /* Status Bar */
 .status-bar {
     display: flex;
@@ -138,6 +218,64 @@ body {
     border-radius: 8px;
     font-size: 13px;
     backdrop-filter: blur(10px);
+}
+
+/* Category Statistics */
+.category-stats {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 20px;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.category-stats h3 {
+    color: white;
+    font-size: 16px;
+    margin-bottom: 15px;
+    font-weight: 600;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 10px;
+}
+
+.stat-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.stat-item:last-child {
+    border-bottom: none;
+}
+
+.stat-category {
+    color: white;
+    font-weight: 500;
+    font-size: 14px;
+}
+
+.stat-count {
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 12px;
+}
+
+/* Filter Summary */
+.filter-summary {
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+    padding: 10px 15px;
+    border-radius: 8px;
+    font-size: 13px;
+    margin-bottom: 20px;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 /* Loading State */
@@ -244,6 +382,15 @@ body {
     font-size: 1.25rem;
     font-weight: 700;
     color: #2d3748;
+    margin-bottom: 8px;
+}
+
+/* Product Meta Section */
+.product-meta {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
     margin-bottom: 5px;
 }
 
@@ -268,6 +415,28 @@ body {
 .source-indicator.discovered {
     background: #ed8936;
 }
+
+/* Category Badges */
+.category-badge {
+    font-size: 10px;
+    font-weight: 600;
+    padding: 3px 8px;
+    border-radius: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: white;
+    display: inline-block;
+}
+
+.category-crm-sales { background: #e53e3e; }
+.category-finance { background: #38a169; }
+.category-support { background: #3182ce; }
+.category-productivity { background: #805ad5; }
+.category-development { background: #d69e2e; }
+.category-hr { background: #dd6b20; }
+.category-marketing { background: #319795; }
+.category-news { background: #4299e1; }
+.category-other { background: #718096; }
 
 .homepage-link {
     display: inline-flex;
@@ -331,9 +500,13 @@ body {
 }
 
 .update-title {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 5px;
     font-weight: 600;
     color: #2d3748;
-    margin-bottom: 5px;
     line-height: 1.4;
 }
 
@@ -341,11 +514,40 @@ body {
     color: inherit;
     text-decoration: none;
     transition: color 0.2s ease;
+    flex: 1;
 }
 
 .update-title a:hover {
     color: #667eea;
 }
+
+/* Update Type Badges */
+.update-type-badge {
+    font-size: 9px;
+    font-weight: 600;
+    padding: 2px 6px;
+    border-radius: 8px;
+    color: white;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.priority-badge {
+    font-size: 9px;
+    font-weight: 600;
+    padding: 2px 6px;
+    border-radius: 8px;
+    color: white;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    margin-left: 4px;
+}
+
+.priority-critical { background: #e53e3e; }
+.priority-major { background: #dd6b20; }
+.priority-normal { background: #4299e1; }
 
 .update-meta {
     display: flex;
@@ -413,6 +615,11 @@ body {
 
 .fallback-link:hover {
     text-decoration: underline;
+}
+
+.fallback-link svg {
+    width: 14px;
+    height: 14px;
 }
 
 /* Status Indicators */
@@ -551,6 +758,20 @@ body {
         min-width: unset;
     }
     
+    .filters {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .filter-group {
+        width: 100%;
+    }
+    
+    .filter-select {
+        min-width: unset;
+        width: 100%;
+    }
+    
     .products-grid {
         grid-template-columns: 1fr;
         gap: 20px;
@@ -562,10 +783,39 @@ body {
         gap: 10px;
     }
     
+    .product-meta {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 5px;
+    }
+    
     .status-bar {
         flex-direction: column;
         align-items: flex-start;
         gap: 5px;
+    }
+    
+    .category-stats {
+        padding: 15px;
+    }
+    
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .update-title {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 5px;
+    }
+    
+    .update-type-badge {
+        margin-left: 0;
+    }
+    
+    .update-meta {
+        flex-direction: column;
+        align-items: flex-start;
     }
     
     .admin-content {
@@ -586,10 +836,5 @@ body {
     
     .product-card {
         padding: 20px;
-    }
-    
-    .update-meta {
-        flex-direction: column;
-        align-items: flex-start;
     }
 }
